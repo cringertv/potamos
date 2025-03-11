@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ΛΕΓΙΤ webTV - A modern web-based television platform">
+    <meta name="keywords" content="webTV, television, streaming, news, entertainment">
+    <meta name="robots" content="index, follow">
+    <title>ΛΕΓΙΤ webTV</title>
+    
+    <!-- Combined and minified CSS with CSS variables -->
+    <style>
+        /* CSS Variables for consistent theming */
+        :root {
+            /* Earthy & Pastel Color Palette */
+            --primary-color: #d4a373;    /* Warm sand */
+            --secondary-color: #2f3e46;  /* Deep forest */
+            --accent-color: #ccd5ae;     /* Sage green */
+            --text-color: #fefae0;       /* Cream white */
+            --text-secondary: #e9edc9;   /* Light sage */
+            --footer-bg: rgba(47, 62, 70, 0.95); /* Semi-transparent deep forest */
+            --font-family: 'Open Sans', sans-serif;
+            --transition-speed: 0.5s;
+            --overlay-bg: rgba(212, 163, 115, 0.15);
+            --overlay-hover: rgba(212, 163, 115, 0.25);
+        }
+
+        /* Reset default styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Base body styles */
+        body {
+            font-family: var(--font-family);
+            background: radial-gradient(circle, var(--primary-color) 0%, var(--secondary-color) 75%);
+            color: var(--text-color);
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* News Bar Styles */
+        .newsBarContainer {
+            font-family: var(--font-family);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 32px;
+            background: var(--footer-bg);
+            overflow: visible;
+            z-index: 2;
+            border-bottom: 1px solid var(--accent-color);
+        }
+
+        #newsScroller {
+            font-family: var(--font-family);
+            display: flex;
+            white-space: nowrap;
+            animation: scrollNews 45s linear infinite;
+            animation-delay: 0s;
+            animation-play-state: paused;
+            padding: 4px 0;
+            margin-top: -2px;
+        }
+
+        @keyframes scrollNews {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* Add hover pause effect for news ticker */
+        #newsScroller:hover {
+            animation-play-state: paused;
+        }
+
+        /* Video Player Container */
+        .player-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+        }
+
+        /* YouTube Player Iframe */
+        .youtube-player {
+            width: 100%;
+            height: 85vh;
+            max-width: 1200px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: all var(--transition-speed) ease;
+        }
+
+        /* Player Controls */
+        .controls {
+            z-index: 3;
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .player-container:hover .controls {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Control Buttons */
+        button {
+            background: var(--overlay-bg);
+            border: none;
+            color: var(--text-color);
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backface-visibility: hidden;
+        }
+
+        button:hover {
+            background: var(--overlay-hover);
+            transform: translateY(-2px);
+        }
+
+        /* Branding */
+        .branding {
+            display: flex;
+            align-items: baseline;
+            gap: 15px;
+            position: absolute;
+            top: 30px;
+            left: 80px;
+            opacity: 0.7;
+            transition: opacity 0.7s ease;
+            z-index: 3;
+        }
+
+        .branding h3 {
+            font-size: 2rem;
+            color: var(--text-color);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .branding h4 {
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            font-weight: normal;
+            font-style: italic;
+        }
+
+        /* Footer */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: var(--footer-bg);
+            padding: 2px 0;
+            text-align: center;
+            border-top: 1px solid var(--accent-color);
+            z-index: 4;
+            height: 24px;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            height: 100%;
+        }
+
+        .footer-section {
+            flex: 1;
+            padding: 0 15px;
+            border-right: 1px solid var(--accent-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 100%;
+        }
+
+        .footer-section:last-child {
+            border-right: none;
+        }
+
+        .footer-section h4 {
+            color: var(--accent-color);
+            font-size: 0.75rem;
+            margin: 0;
+        }
+
+        .footer-section p {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            margin: 0;
+        }
+
+        /* Transition Effects */
+        .transition-overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(108,57,43,1) 0%, rgba(6,6,37,1) 63%);
+            opacity: 0;
+            transition: opacity var(--transition-speed) ease;
+            z-index: 2;
+        }
+
+        /* Video Information */
+        .video-info {
+            background-color: #2f3e46;
+            font-size: 1.5rem;
+            font-weight: italic;
+            opacity: 0;
+            position: absolute;
+            top: 10%;
+            right: 7%;
+            width: 14%;
+            text-align: right;
+            transition: opacity 0.3s ease;
+        }
+        
+
+        .player-container:hover .video-info {
+            opacity: 1;
+        }
+
+        /* Typography */
+        h2 {
+            font-size: 1rem;
+            margin-bottom: 5px;
+            color: var(--text-color);
+        }
+
+        p {
+            color: var(--text-secondary);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .youtube-player {
+                width: 95%;
+                height: 70vh;
+            }
+            
+            h2 {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="newsBarContainer">
+        <div id="newsScroller"></div>
+    </div>
+    <div class="player-container">
+        <div class="branding">
+            <h3>Ποταμός webTV</h3>
+            <h4>Ρωγμή στο φράγμα της υποταγής!</h4>
+        </div>
+        
+        <div class="transition-overlay"></div>
+        
+        <div class="youtube-player" id="player"></div>
+        
+        <div class="video-info">
+            <h2 id="video-title">POTAMOS WEB-TV</h2>
+            <p id="video-description">Μαλλον υπάρχει κάποιο πρόβλημα. Επικοινωνήστε στο ηλεκτρονικό μας ταχυδρομείο.</p>
+        </div>
+        
+        <div class="controls">
+            <button id="prev-btn" aria-label="Previous Video">Προηγούμενο </button>
+            <button id="play-pause-btn" aria-label="Play/Pause">Παύση</button>
+            <button id="mute-btn" aria-label="Mute/Unmute">Ήχος</button>
+            <button id="next-btn" aria-label="Next Video">Επόμενο</button>
+            <button id="fullscreen-btn" aria-label="Toggle Fullscreen">Μεγιστοποίηση </button>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Υποστήριξη</h4>
+                <p>CringeTV</p>
+            </div>
+            <div class="footer-section">
+                <h4>Πρόγραμμα Ποταμός TV</h4>
+                <p>Σύντομα εδώ</p>
+            </div>
+            <div class="footer-section">
+                <h4>Παραγωγή</h4>
+                <p>Plantango</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Combined and optimized JavaScript
+        const playlist = [
+            "5v3Zq84YQ6I", "11qXS8bXdsc", "7263YsyaDBc", "PelzSnmwQ-M", 
+            "lmVAb_7vzYA", "w7k5xPIpuN0", "wyVTQdW3d_Q", "RVWadttGEPM", 
+            "6aM2IvVudxM", "PyLNiOkzyRU", "FGWICvtZn74", "QWs56m8QniI", 
+            "0URH98uvG7w"
+        ];
+        const rssFeedUrl = 'https://corsproxy.io/' + encodeURIComponent('https://www.news.gr/rss.ashx');
+        const newsScroller = document.getElementById('newsScroller');
+        
+        let currentVideoIndex = 0;
+        let player;
+        let isFullscreen = false;
+        let isMuted = true;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch(rssFeedUrl)
+                .then(response => response.text())
+                .then(xmlText => {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+                    const items = xmlDoc.querySelectorAll('item');
+
+                    if (items.length === 0) {
+                        newsScroller.innerHTML = '<div style="padding: 10px;">No news items found in RSS feed.</div>';
+                        return;
+                    }
+
+                    let newsItemsHTML = '';
+                    let itemCount = 0;
+                    items.forEach(item => {
+                        if (itemCount < 10) {
+                            const titleElement = item.querySelector('title');
+                            const linkElement = item.querySelector('link');
+                            if (titleElement && linkElement) {
+                                const title = titleElement.textContent;
+                                const link = linkElement.textContent;
+                                newsItemsHTML += `
+                                    <div style="padding: 10px; margin-right: 20px;">
+                                        <a href="${link}" target="_blank" style="color:#f6de81; text-decoration: none; font-weight: bold;">${title}</a>
+                                    </div>
+                                `;
+                                itemCount++;
+                            }
+                        }
+                    });
+
+                    if (newsItemsHTML === '') {
+                        newsScroller.innerHTML = '<div style="padding: 10px;">Could not extract news titles and links. Check RSS feed structure.</div>';
+                    } else {
+                        newsScroller.innerHTML = newsItemsHTML;
+                    }
+
+                    setTimeout(() => {
+                        newsScroller.style.animationPlayState = 'running';
+                    }, 100);
+                })
+                .catch(error => {
+                    console.error('Error fetching or parsing RSS feed:', error);
+                    newsScroller.innerHTML = `<div style="padding: 10px; color: red;">Error loading news feed: ${error.message}</div>`;
+                });
+        });
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                height: '100%',
+                width: '100%',
+                videoId: playlist[currentVideoIndex],
+                playerVars: {
+                    autoplay: 1,
+                    mute: 1,
+                    modestbranding: 1,
+                    rel: 0,
+                    controls: 0,
+                    disablekb: 1,
+                    iv_load_policy: 3,
+                    showinfo: 0
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        function onPlayerReady(event) {
+            document.getElementById('play-pause-btn').addEventListener('click', togglePlayPause);
+            document.getElementById('next-btn').addEventListener('click', playNextVideo);
+            document.getElementById('prev-btn').addEventListener('click', playPreviousVideo);
+            document.getElementById('fullscreen-btn').addEventListener('click', toggleFullscreen);
+            document.getElementById('mute-btn').addEventListener('click', toggleMute);
+            
+            updateVideoInfo();
+            
+            event.target.playVideo();
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.ENDED) {
+                const overlay = document.querySelector('.transition-overlay');
+                overlay.style.opacity = '1';
+                
+                setTimeout(() => {
+                    playNextVideo();
+                    setTimeout(() => {
+                        overlay.style.opacity = '0';
+                    }, 500);
+                }, 1000);
+            }
+        }
+
+        function togglePlayPause() {
+            if (player.getPlayerState() === YT.PlayerState.PLAYING) {
+                player.pauseVideo();
+                document.getElementById('play-pause-btn').textContent = 'Play';
+            } else {
+                player.playVideo();
+                document.getElementById('play-pause-btn').textContent = 'Pause';
+            }
+        }
+
+        function playNextVideo() {
+            currentVideoIndex = (currentVideoIndex + 1) % playlist.length;
+            loadNewVideo();
+        }
+
+        function playPreviousVideo() {
+            currentVideoIndex = (currentVideoIndex - 1 + playlist.length) % playlist.length;
+            loadNewVideo();
+        }
+
+        function loadNewVideo() {
+            player.loadVideoById({
+                videoId: playlist[currentVideoIndex],
+                startSeconds: 0,
+                suggestedQuality: 'hd720'
+            });
+            updateVideoInfo();
+        }
+
+        function updateVideoInfo() {
+            const videoTitle = document.getElementById('video-title');
+            const videoDescription = document.getElementById('video-description');
+            
+            videoTitle.textContent = `Ροή ${currentVideoIndex + 1} από τα ${playlist.length} βίντεo`;
+            videoDescription.textContent = 'Καλώς Ήρθατε';
+        }
+
+        function toggleFullscreen() {
+            const elem = document.documentElement;
+            if (!isFullscreen) {
+                if (elem.requestFullscreen) elem.requestFullscreen();
+                else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
+                else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            }
+            isFullscreen = !isFullscreen;
+            document.getElementById('fullscreen-btn').textContent = isFullscreen ? 'Exit Fullscreen' : 'Fullscreen';
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            if (isMuted) {
+                player.mute();
+                document.getElementById('mute-btn').textContent = 'Σιγαση';
+            } else {
+                player.unMute();
+                document.getElementById('mute-btn').textContent = 'Ηχος';
+            }
+        }
+    </script>
+</body>
+</html>
