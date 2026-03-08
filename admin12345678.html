@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>WorkTruth · Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#07090d;--surface:#0e1117;--surface2:#141820;--surface3:#1a2030;
+  --border:rgba(255,255,255,0.07);--border-strong:rgba(255,255,255,0.13);
+  --accent:#e8ff47;--accent2:#47ffd4;--accent3:#ff6b6b;--accent4:#b47fff;
+  --accent5:#ffa647;
+  --text:#f0f2f5;--text-muted:#6b7280;--text-dim:#3d4555;
+  --syne:'Syne',sans-serif;--dm:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --r:12px;--shadow:0 8px 40px rgba(0,0,0,0.6);
+  --sidebar:240px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--dm);font-size:14px;overflow:hidden;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px;}
+
+/* LOGIN SCREEN */
+#login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000;}
+.login-box{background:var(--surface);border:1px solid var(--border-strong);border-radius:20px;padding:48px;width:100%;max-width:420px;box-shadow:var(--shadow);}
+.login-logo{font-family:var(--syne);font-weight:800;font-size:1.6rem;margin-bottom:6px;}
+.login-logo span{color:var(--accent);}
+.login-sub{color:var(--text-muted);font-size:0.85rem;margin-bottom:32px;}
+.login-label{display:block;font-family:var(--mono);font-size:0.68rem;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;}
+.login-input{width:100%;padding:11px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--dm);font-size:0.92rem;outline:none;margin-bottom:14px;transition:border-color 0.2s;}
+.login-input:focus{border-color:rgba(232,255,71,0.45);}
+.login-btn{width:100%;padding:13px;background:var(--accent);color:#07090d;border:none;border-radius:10px;font-family:var(--syne);font-weight:800;font-size:1rem;cursor:pointer;margin-top:4px;transition:background 0.15s;}
+.login-btn:hover{background:#d4eb30;}
+.login-error{color:var(--accent3);font-size:0.78rem;font-family:var(--mono);margin-top:8px;display:none;}
+.login-error.show{display:block;}
+.login-glow{position:absolute;top:30%;left:50%;transform:translateX(-50%);width:400px;height:200px;background:radial-gradient(ellipse,rgba(232,255,71,0.07),transparent 70%);pointer-events:none;}
+
+/* APP SHELL */
+#app{display:none;height:100vh;width:100vw;}
+#app.visible{display:flex;}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;overflow-y:auto;}
+.sidebar-logo{padding:20px 20px 16px;font-family:var(--syne);font-weight:800;font-size:1.1rem;border-bottom:1px solid var(--border);}
+.sidebar-logo span{color:var(--accent);}
+.sidebar-logo sub{display:block;font-family:var(--mono);font-size:0.6rem;color:var(--text-muted);font-weight:400;letter-spacing:1px;margin-top:2px;}
+.sidebar-section{padding:16px 12px 4px;font-family:var(--mono);font-size:0.6rem;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;margin:0 8px 2px;cursor:pointer;font-size:0.83rem;color:var(--text-muted);transition:all 0.15s;position:relative;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:rgba(232,255,71,0.1);color:var(--accent);}
+.nav-item.active::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--accent);border-radius:0 2px 2px 0;}
+.nav-icon{font-size:1rem;flex-shrink:0;width:18px;text-align:center;}
+.nav-badge{margin-left:auto;background:var(--accent3);color:#fff;font-family:var(--mono);font-size:0.62rem;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center;}
+.nav-badge.green{background:var(--accent2);color:#0a0c0f;}
+.sidebar-footer{margin-top:auto;padding:16px;border-top:1px solid var(--border);}
+.admin-pill{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:8px;}
+.admin-avatar{width:28px;height:28px;border-radius:6px;background:rgba(232,255,71,0.15);display:flex;align-items:center;justify-content:center;font-family:var(--syne);font-weight:700;font-size:0.75rem;color:var(--accent);}
+.admin-name{font-family:var(--mono);font-size:0.72rem;color:var(--text-muted);flex:1;}
+.logout-btn{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.8rem;transition:color 0.15s;}
+.logout-btn:hover{color:var(--accent3);}
+
+/* MAIN CONTENT */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0;}
+.topbar{padding:16px 28px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:var(--bg);}
+.page-title{font-family:var(--syne);font-weight:800;font-size:1.2rem;letter-spacing:-0.3px;}
+.topbar-actions{display:flex;align-items:center;gap:8px;}
+.content{padding:24px 28px;flex:1;}
+
+/* CARDS & PANELS */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);}
+.panel-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.panel-title{font-family:var(--syne);font-weight:700;font-size:0.92rem;}
+.panel-body{padding:16px 20px;}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden;}
+.stat-card::after{content:attr(data-icon);position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:2rem;opacity:0.15;}
+.stat-label{font-family:var(--mono);font-size:0.65rem;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}
+.stat-value{font-family:var(--syne);font-weight:800;font-size:1.9rem;letter-spacing:-1px;}
+.stat-change{font-size:0.72rem;margin-top:4px;}
+.stat-change.up{color:var(--accent2);}
+.stat-change.down{color:var(--accent3);}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.83rem;}
+th{padding:10px 14px;text-align:left;font-family:var(--mono);font-size:0.62rem;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:12px 14px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:top;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--surface2);}
+.td-company{display:flex;align-items:center;gap:8px;font-weight:500;}
+.td-logo{width:28px;height:28px;border-radius:6px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0;}
+.td-name{font-family:var(--syne);font-weight:700;font-size:0.83rem;}
+.td-sub{color:var(--text-muted);font-size:0.73rem;}
+.stars-sm{color:var(--accent);font-size:0.75rem;letter-spacing:0.5px;}
+.badge{padding:3px 8px;border-radius:10px;font-size:0.68rem;font-family:var(--mono);font-weight:500;white-space:nowrap;}
+.badge-green{background:rgba(71,255,212,0.1);color:var(--accent2);border:1px solid rgba(71,255,212,0.2);}
+.badge-yellow{background:rgba(232,255,71,0.1);color:var(--accent);border:1px solid rgba(232,255,71,0.2);}
+.badge-red{background:rgba(255,107,107,0.1);color:var(--accent3);border:1px solid rgba(255,107,107,0.2);}
+.badge-purple{background:rgba(180,127,255,0.1);color:var(--accent4);border:1px solid rgba(180,127,255,0.2);}
+.badge-gray{background:rgba(255,255,255,0.05);color:var(--text-muted);border:1px solid var(--border);}
+.action-btn{padding:5px 12px;border-radius:6px;font-family:var(--syne);font-weight:700;font-size:0.72rem;cursor:pointer;border:none;transition:all 0.15s;white-space:nowrap;}
+.action-btn-approve{background:rgba(71,255,212,0.1);color:var(--accent2);border:1px solid rgba(71,255,212,0.25);}
+.action-btn-approve:hover{background:var(--accent2);color:#0a0c0f;}
+.action-btn-certify{background:rgba(232,255,71,0.1);color:var(--accent);border:1px solid rgba(232,255,71,0.25);}
+.action-btn-certify:hover{background:var(--accent);color:#0a0c0f;}
+.action-btn-reject{background:rgba(255,107,107,0.1);color:var(--accent3);border:1px solid rgba(255,107,107,0.25);}
+.action-btn-reject:hover{background:var(--accent3);color:#fff;}
+.action-btn-edit{background:rgba(255,255,255,0.05);color:var(--text-muted);border:1px solid var(--border);}
+.action-btn-edit:hover{background:var(--surface3);color:var(--text);}
+.actions-group{display:flex;gap:5px;flex-wrap:wrap;}
+
+/* REVIEW PREVIEW */
+.review-preview{font-size:0.8rem;color:var(--text-muted);line-height:1.5;max-width:340px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+
+/* FORM ELEMENTS */
+.btn{padding:8px 16px;border-radius:8px;font-family:var(--syne);font-weight:700;font-size:0.8rem;cursor:pointer;border:none;transition:all 0.15s;}
+.btn-primary{background:var(--accent);color:#07090d;}
+.btn-primary:hover{background:#d4eb30;}
+.btn-ghost{background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);}
+.btn-ghost:hover{color:var(--text);border-color:var(--border-strong);}
+.btn-danger{background:rgba(255,107,107,0.1);color:var(--accent3);border:1px solid rgba(255,107,107,0.25);}
+.btn-danger:hover{background:var(--accent3);color:#fff;}
+
+input,textarea,select{
+  padding:9px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;
+  color:var(--text);font-family:var(--dm);font-size:0.85rem;outline:none;transition:border-color 0.2s;-webkit-appearance:none;
+}
+input:focus,textarea:focus,select:focus{border-color:rgba(232,255,71,0.45);}
+select option{background:var(--surface2);}
+label{display:block;font-family:var(--mono);font-size:0.65rem;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:5px;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(12px);z-index:500;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.modal-overlay.open{opacity:1;pointer-events:auto;}
+.modal{background:var(--surface);border:1px solid var(--border-strong);border-radius:18px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow);transform:translateY(16px);transition:transform 0.2s;}
+.modal-overlay.open .modal{transform:none;}
+.modal-header{padding:20px 24px 0;display:flex;justify-content:space-between;align-items:center;}
+.modal-title{font-family:var(--syne);font-weight:800;font-size:1.1rem;}
+.modal-close{width:30px;height:30px;border-radius:6px;background:var(--surface2);border:none;color:var(--text-muted);cursor:pointer;font-size:1rem;}
+.modal-close:hover{color:var(--text);}
+.modal-body{padding:20px 24px 24px;}
+.form-group{margin-bottom:14px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* TOAST */
+#toast{position:fixed;bottom:20px;right:20px;z-index:999;background:var(--surface);border:1px solid var(--border-strong);border-radius:8px;padding:10px 16px;font-family:var(--mono);font-size:0.78rem;color:var(--text);opacity:0;transform:translateY(8px);transition:all 0.25s;pointer-events:none;}
+#toast.on{opacity:1;transform:none;}
+#toast.success{border-color:rgba(71,255,212,0.4);color:var(--accent2);}
+#toast.error{border-color:rgba(255,107,107,0.4);color:var(--accent3);}
+#toast.warn{border-color:rgba(232,255,71,0.4);color:var(--accent);}
+
+/* LOADING */
+.spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-row{display:flex;align-items:center;justify-content:center;gap:10px;padding:32px;color:var(--text-muted);font-size:0.83rem;}
+
+/* SEARCH */
+.search-box{padding:7px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--dm);font-size:0.83rem;outline:none;width:220px;}
+.search-box:focus{border-color:rgba(232,255,71,0.4);}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:48px 20px;color:var(--text-muted);font-size:0.85rem;}
+.empty-icon{font-size:2.5rem;margin-bottom:12px;}
+
+/* FILTERS */
+.filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+.fchip{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:0.72rem;font-family:var(--mono);cursor:pointer;transition:all 0.13s;}
+.fchip:hover{border-color:var(--border-strong);color:var(--text);}
+.fchip.active{background:rgba(232,255,71,0.1);border-color:rgba(232,255,71,0.3);color:var(--accent);}
+
+/* REVIEW FULL BODY */
+.review-full-body{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:0.83rem;line-height:1.7;color:var(--text-muted);margin:8px 0;}
+.ratings-mini{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0;}
+.rm-item{font-family:var(--mono);font-size:0.68rem;color:var(--text-muted);}
+.rm-item span{color:var(--accent);}
+
+/* TABS */
+.tab-row{display:flex;gap:2px;margin-bottom:18px;border-bottom:1px solid var(--border);padding-bottom:0;}
+.tab{padding:8px 16px;border:none;background:none;color:var(--text-muted);font-family:var(--syne);font-weight:600;font-size:0.8rem;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* PAGINATION */
+.pag{display:flex;align-items:center;justify-content:center;gap:4px;padding:16px 0;}
+.pag-btn{width:30px;height:30px;border:1px solid var(--border);background:var(--surface2);border-radius:6px;color:var(--text-muted);font-family:var(--mono);font-size:0.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.13s;}
+.pag-btn:hover{border-color:var(--border-strong);color:var(--text);}
+.pag-btn.active{background:var(--accent);border-color:var(--accent);color:#0a0c0f;font-weight:700;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div style="position:relative;">
+    <div class="login-glow"></div>
+    <div class="login-box">
+      <div class="login-logo">Work<span>Truth</span></div>
+      <div class="login-sub">Admin Panel · Restricted Access</div>
+      <label class="login-label">Admin Email</label>
+      <input class="login-input" id="admin-email" type="email" placeholder="admin@worktruth.io"/>
+      <label class="login-label">Password</label>
+      <input class="login-input" id="admin-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAdminLogin()"/>
+      <button class="login-btn" onclick="doAdminLogin()">Sign In to Admin Panel</button>
+      <div class="login-error" id="login-error">Invalid credentials.</div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">Work<span>Truth</span><sub>ADMIN CONSOLE</sub></div>
+    <div class="sidebar-section">Moderation</div>
+    <div class="nav-item active" onclick="navTo('pending')" id="nav-pending">
+      <span class="nav-icon">⏳</span> Pending Reviews
+      <span class="nav-badge" id="pending-badge">0</span>
+    </div>
+    <div class="nav-item" onclick="navTo('certified')" id="nav-certified">
+      <span class="nav-icon">✓</span> Certify Reviews
+    </div>
+    <div class="nav-item" onclick="navTo('reported')" id="nav-reported">
+      <span class="nav-icon">⚑</span> Reported
+      <span class="nav-badge" id="reported-badge">0</span>
+    </div>
+    <div class="sidebar-section">Content</div>
+    <div class="nav-item" onclick="navTo('reviews')" id="nav-reviews">
+      <span class="nav-icon">📝</span> All Reviews
+    </div>
+    <div class="nav-item" onclick="navTo('companies')" id="nav-companies">
+      <span class="nav-icon">🏢</span> Companies
+    </div>
+    <div class="nav-item" onclick="navTo('users')" id="nav-users">
+      <span class="nav-icon">👥</span> Users
+    </div>
+    <div class="sidebar-section">System</div>
+    <div class="nav-item" onclick="navTo('dashboard')" id="nav-dashboard">
+      <span class="nav-icon">📊</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="navTo('settings')" id="nav-settings">
+      <span class="nav-icon">⚙️</span> Settings
+    </div>
+    <div class="sidebar-footer">
+      <div class="admin-pill">
+        <div class="admin-avatar" id="admin-avatar">A</div>
+        <span class="admin-name" id="admin-label">admin</span>
+        <button class="logout-btn" onclick="adminLogout()">Exit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title" id="page-title">Pending Reviews</div>
+      <div class="topbar-actions">
+        <input class="search-box" id="global-search" placeholder="🔍 Search..." oninput="handleGlobalSearch(this.value)"/>
+        <button class="btn btn-primary" id="topbar-action-btn" onclick="topbarAction()">+ Add Company</button>
+      </div>
+    </div>
+    <div class="content" id="main-content">
+      <div class="loading-row"><div class="spinner"></div> Loading...</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<!-- Company Edit/Add Modal -->
+<div class="modal-overlay" id="company-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="company-modal-title">Add Company</div>
+      <button class="modal-close" onclick="closeModal('company-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cm-id"/>
+      <div class="form-row">
+        <div class="form-group"><label>Company Name *</label><input id="cm-name" placeholder="Acme Corp"/></div>
+        <div class="form-group"><label>Emoji Icon</label><input id="cm-emoji" placeholder="🏢" maxlength="4" style="font-size:1.3rem;"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Industry</label>
+          <select id="cm-industry">
+            <option>Technology</option><option>Healthcare</option><option>Finance</option>
+            <option>Retail</option><option>Logistics</option><option>Education</option>
+            <option>Hospitality</option><option>Construction</option><option>Legal</option>
+            <option>Creative</option><option>Manufacturing</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group"><label>City</label><input id="cm-city" placeholder="Athens"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Country</label><input id="cm-country" placeholder="Greece"/></div>
+        <div class="form-group"><label>Company Size</label>
+          <select id="cm-size">
+            <option value="1-10">1–10</option><option value="11-50">11–50</option>
+            <option value="51-200">51–200</option><option value="201-1000">201–1000</option>
+            <option value="1000+">1000+</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Latitude</label><input id="cm-lat" type="number" step="any" placeholder="37.98"/></div>
+        <div class="form-group"><label>Longitude</label><input id="cm-lng" type="number" step="any" placeholder="23.73"/></div>
+      </div>
+      <div class="form-group"><label>Tagline / Short Description</label><input id="cm-tagline" placeholder="One-liner about this company"/></div>
+      <div class="form-group"><label>Full Description</label><textarea id="cm-desc" rows="3" placeholder="Longer company description..."></textarea></div>
+      <div class="form-group"><label>Website</label><input id="cm-website" type="url" placeholder="https://company.com"/></div>
+      <div class="form-row">
+        <div class="form-group"><label>Founded Year</label><input id="cm-founded" type="number" placeholder="2010"/></div>
+        <div class="form-group" style="display:flex;align-items:flex-end;gap:10px;">
+          <label style="white-space:nowrap;"><input type="checkbox" id="cm-certified" style="width:auto;margin-right:6px;padding:0;"/> Certified Partner</label>
+          <label style="white-space:nowrap;"><input type="checkbox" id="cm-trending" style="width:auto;margin-right:6px;padding:0;"/> Trending</label>
+          <label style="white-space:nowrap;"><input type="checkbox" id="cm-active" checked style="width:auto;margin-right:6px;padding:0;"/> Active</label>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:12px;margin-top:6px;" onclick="saveCompany()">Save Company</button>
+    </div>
+  </div>
+</div>
+
+<!-- Review Full View Modal -->
+<div class="modal-overlay" id="review-view-modal">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <div class="modal-title">Review Detail</div>
+      <button class="modal-close" onclick="closeModal('review-view-modal')">×</button>
+    </div>
+    <div class="modal-body" id="review-view-content"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ═══════════════════════════════════════════════════
+// CONFIG — replace with your Supabase values
+// ═══════════════════════════════════════════════════
+const SB_URL = 'https://wnaihqjjuexmglephord.supabase.co';
+const SB_KEY = 'sb_publishable_P9ELlSoBpJy-b4eY4l6E5w_YrwjDVJX';
+const ADMIN_EMAIL    = 'admin@worktruth.io';   // change to your admin email
+const ADMIN_PASSWORD = 'admin12345678';         // change this!
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+var sb, adminUser;
+var currentSection = 'pending';
+var allData = { reviews: [], companies: [], users: [] };
+var filters = { status: 'all', certified: 'all', search: '' };
+var toastTimer;
+const PAGE = 25;
+var currentPage = 1;
+
+// ═══════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════
+window.addEventListener('load', async function() {
+  try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e){ console.warn('SB:',e); }
+  // Check existing session
+  if (sb) {
+    var { data: { session } } = await sb.auth.getSession();
+    if (session && session.user.email === ADMIN_EMAIL) {
+      adminUser = session.user;
+      showApp();
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════
+async function doAdminLogin() {
+  var email = document.getElementById('admin-email').value.trim();
+  var pass  = document.getElementById('admin-pass').value;
+  var errEl = document.getElementById('login-error');
+  errEl.classList.remove('show');
+  if (!email||!pass) { errEl.textContent='Enter email and password.'; errEl.classList.add('show'); return; }
+  if (sb) {
+    var { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error || !data.user) { errEl.textContent='Invalid credentials.'; errEl.classList.add('show'); return; }
+    if (data.user.email !== ADMIN_EMAIL) {
+      await sb.auth.signOut();
+      errEl.textContent='Unauthorized account.'; errEl.classList.add('show'); return;
+    }
+    adminUser = data.user;
+  } else {
+    // Offline/demo mode: simple password check
+    if (pass !== ADMIN_PASSWORD) { errEl.textContent='Wrong password.'; errEl.classList.add('show'); return; }
+    adminUser = { email };
+  }
+  showApp();
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  if (adminUser) {
+    document.getElementById('admin-label').textContent = adminUser.email ? adminUser.email.split('@')[0] : 'Admin';
+    document.getElementById('admin-avatar').textContent = (adminUser.email||'A')[0].toUpperCase();
+  }
+  navTo('pending');
+  loadBadges();
+}
+
+function adminLogout() {
+  if (sb) sb.auth.signOut();
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').classList.remove('visible');
+  toast('Signed out');
+}
+
+// ═══════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════
+var sections = {
+  dashboard: { title: 'Dashboard', action: 'Export Data' },
+  pending:   { title: 'Pending Reviews', action: '+ Add Company' },
+  certified: { title: 'Certify Reviews', action: '+ Add Company' },
+  reported:  { title: 'Reported Reviews', action: '+ Add Company' },
+  reviews:   { title: 'All Reviews', action: '+ Add Company' },
+  companies: { title: 'Companies', action: '+ Add Company' },
+  users:     { title: 'Users', action: 'Refresh' },
+  settings:  { title: 'Settings', action: 'Save Settings' },
+};
+
+function navTo(section) {
+  currentSection = section;
+  currentPage = 1;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  var navEl = document.getElementById('nav-'+section);
+  if (navEl) navEl.classList.add('active');
+  var s = sections[section] || {};
+  document.getElementById('page-title').textContent = s.title || section;
+  document.getElementById('topbar-action-btn').textContent = s.action || '+';
+  render(section);
+}
+
+function topbarAction() {
+  if (currentSection === 'companies') openCompanyModal(null);
+  else if (currentSection === 'dashboard') exportData();
+  else if (currentSection === 'users') loadUsers();
+  else if (currentSection === 'settings') saveSettings();
+  else openCompanyModal(null);
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER ROUTER
+// ═══════════════════════════════════════════════════
+async function render(section) {
+  var c = document.getElementById('main-content');
+  c.innerHTML = '<div class="loading-row"><div class="spinner"></div> Loading...</div>';
+  if      (section==='dashboard')  await renderDashboard();
+  else if (section==='pending')    await renderPendingReviews();
+  else if (section==='certified')  await renderCertifyReviews();
+  else if (section==='reported')   await renderReportedReviews();
+  else if (section==='reviews')    await renderAllReviews();
+  else if (section==='companies')  await renderCompanies();
+  else if (section==='users')      await renderUsers();
+  else if (section==='settings')   renderSettings();
+}
+
+// ═══════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════
+async function renderDashboard() {
+  var c = document.getElementById('main-content');
+  var stats = { pending:0, total:0, certified:0, companies:0, reported:0 };
+  if (sb) {
+    var [p,t,cert,co,rep] = await Promise.all([
+      sb.from('reviews').select('id',{count:'exact',head:true}).eq('status','pending'),
+      sb.from('reviews').select('id',{count:'exact',head:true}),
+      sb.from('reviews').select('id',{count:'exact',head:true}).eq('is_certified',true),
+      sb.from('companies').select('id',{count:'exact',head:true}).eq('is_active',true),
+      sb.from('review_reports').select('id',{count:'exact',head:true}).eq('resolved',false),
+    ]);
+    stats = { pending:p.count||0, total:t.count||0, certified:cert.count||0, companies:co.count||0, reported:rep.count||0 };
+  } else {
+    stats = { pending:12, total:287, certified:48, companies:34, reported:5 };
+  }
+  c.innerHTML =
+    '<div class="stats-grid">'+
+      statCard('Pending Review', stats.pending, '⏳', 'up', '+'+stats.pending+' awaiting moderation')+
+      statCard('Total Reviews', stats.total, '📝', 'up', 'All time')+
+      statCard('Certified Reviews', stats.certified, '✓', 'green', 'Verified by team')+
+      statCard('Active Companies', stats.companies, '🏢', '', '')+
+    '</div>'+
+    '<div class="panel">'+
+      '<div class="panel-header"><span class="panel-title">Quick Actions</span></div>'+
+      '<div class="panel-body" style="display:flex;gap:10px;flex-wrap:wrap;">'+
+        '<button class="btn btn-primary" onclick="navTo(\'pending\')">Review Queue ('+stats.pending+')</button>'+
+        '<button class="btn btn-primary" onclick="navTo(\'certified\')">Certify Reviews</button>'+
+        '<button class="btn btn-ghost" onclick="navTo(\'reported\')">Reports ('+stats.reported+')</button>'+
+        '<button class="btn btn-ghost" onclick="openCompanyModal(null)">Add Company</button>'+
+      '</div>'+
+    '</div>';
+}
+
+function statCard(label, value, icon, changeDir, changeTxt) {
+  return '<div class="stat-card" data-icon="'+icon+'">'+
+    '<div class="stat-label">'+label+'</div>'+
+    '<div class="stat-value">'+value+'</div>'+
+    '<div class="stat-change '+(changeDir==='up'?'up':changeDir==='green'?'up':changeDir==='down'?'down':'')+'">'+changeTxt+'</div>'+
+  '</div>';
+}
+
+// ═══════════════════════════════════════════════════
+// PENDING REVIEWS
+// ═══════════════════════════════════════════════════
+async function renderPendingReviews() {
+  var c = document.getElementById('main-content');
+  var reviews = [];
+  if (sb) {
+    var { data, error } = await sb.from('reviews').select('*,companies(name,emoji)').eq('status','pending').order('created_at',{ascending:true});
+    reviews = data || [];
+  } else reviews = getDemoReviews('pending');
+  document.getElementById('pending-badge').textContent = reviews.length;
+  if (!reviews.length) { c.innerHTML='<div class="empty-state"><div class="empty-icon">✓</div><div>Queue is clear!</div></div>'; return; }
+  c.innerHTML = '<div class="panel"><div class="panel-header"><span class="panel-title">'+reviews.length+' Reviews Awaiting Moderation</span></div><div class="table-wrap">'+reviewsTable(reviews, 'pending')+'</div></div>';
+}
+
+async function renderCertifyReviews() {
+  var c = document.getElementById('main-content');
+  var reviews = [];
+  if (sb) {
+    var { data } = await sb.from('reviews').select('*,companies(name,emoji)').eq('status','approved').eq('is_certified',false).order('helpful_count',{ascending:false}).limit(50);
+    reviews = data || [];
+  } else reviews = getDemoReviews('approved');
+  c.innerHTML = '<div style="margin-bottom:14px;"><div class="anon-note" style="background:rgba(232,255,71,0.04);border-color:rgba(232,255,71,0.15);padding:12px 16px;border-radius:8px;font-size:0.78rem;color:var(--text-muted);margin-bottom:0;">'+
+    '<b style="color:var(--accent);">✓ Certification</b> marks a review as independently verified by our team. Certified reviews carry a special badge and rank higher in search results.</div></div>'+
+    '<div class="panel"><div class="panel-header"><span class="panel-title">Approved Reviews — Ready to Certify</span></div><div class="table-wrap">'+reviewsTable(reviews, 'certify')+'</div></div>';
+}
+
+async function renderReportedReviews() {
+  var c = document.getElementById('main-content');
+  var reports = [];
+  if (sb) {
+    var { data } = await sb.from('review_reports').select('*,reviews(title,body,company_name,status,is_certified)').eq('resolved',false).order('created_at',{ascending:false});
+    reports = data || [];
+  } else reports = [];
+  document.getElementById('reported-badge').textContent = reports.length;
+  if (!reports.length) { c.innerHTML='<div class="empty-state"><div class="empty-icon">✓</div><div>No open reports.</div></div>'; return; }
+  c.innerHTML = '<div class="panel"><div class="panel-header"><span class="panel-title">'+reports.length+' Open Reports</span></div><div class="table-wrap"><table><thead><tr><th>Review</th><th>Reason</th><th>Reported</th><th>Actions</th></tr></thead><tbody>'+
+    reports.map(function(r){
+      var rv = r.reviews || {};
+      return '<tr>'+
+        '<td><div class="td-name">'+escHtml(rv.title||'Untitled')+'</div><div class="td-sub">'+escHtml(rv.company_name||'')+'</div></td>'+
+        '<td>'+escHtml(r.reason||'inappropriate')+'</td>'+
+        '<td style="font-family:var(--mono);font-size:0.72rem;color:var(--text-muted);">'+(r.created_at?new Date(r.created_at).toLocaleDateString():'-')+'</td>'+
+        '<td><div class="actions-group">'+
+          '<button class="action-btn action-btn-edit" onclick="viewReview(\''+r.review_id+'\')">View</button>'+
+          '<button class="action-btn action-btn-reject" onclick="rejectReview(\''+r.review_id+'\',\''+r.id+'\')">Remove Review</button>'+
+          '<button class="action-btn action-btn-approve" onclick="resolveReport(\''+r.id+'\')">Dismiss</button>'+
+        '</div></td>'+
+      '</tr>';
+    }).join('')+
+  '</tbody></table></div></div>';
+}
+
+async function renderAllReviews() {
+  var c = document.getElementById('main-content');
+  var reviews = [];
+  if (sb) {
+    var q = sb.from('reviews').select('*,companies(name,emoji)').order('created_at',{ascending:false});
+    if (filters.status !== 'all') q = q.eq('status', filters.status);
+    if (filters.certified === 'yes') q = q.eq('is_certified', true);
+    if (filters.certified === 'no') q = q.eq('is_certified', false);
+    var { data } = await q.range((currentPage-1)*PAGE, currentPage*PAGE-1);
+    reviews = data || [];
+  } else reviews = getDemoReviews('all');
+  var filterBar = '<div class="filter-bar">'+
+    '<span style="font-family:var(--mono);font-size:0.68rem;color:var(--text-dim);">STATUS:</span>'+
+    ['all','pending','approved','rejected'].map(s=>'<div class="fchip'+(filters.status===s?' active':'')+'" onclick="setFilter(\'status\',\''+s+'\')">'+s+'</div>').join('')+
+    '<span style="margin-left:8px;font-family:var(--mono);font-size:0.68rem;color:var(--text-dim);">CERT:</span>'+
+    [{v:'all',l:'all'},{v:'yes',l:'certified'},{v:'no',l:'not certified'}].map(f=>'<div class="fchip'+(filters.certified===f.v?' active':'')+'" onclick="setFilter(\'certified\',\''+f.v+'\')">'+f.l+'</div>').join('')+
+  '</div>';
+  c.innerHTML = filterBar + '<div class="panel"><div class="panel-header"><span class="panel-title">Reviews ('+reviews.length+')</span></div><div class="table-wrap">'+reviewsTable(reviews,'all')+'</div></div>';
+}
+
+// ═══════════════════════════════════════════════════
+// COMPANIES
+// ═══════════════════════════════════════════════════
+async function renderCompanies() {
+  var c = document.getElementById('main-content');
+  var companies = [];
+  if (sb) {
+    var { data } = await sb.from('companies').select('*').order('created_at',{ascending:false});
+    companies = data || [];
+  } else companies = getDemoCompanies();
+  allData.companies = companies;
+  c.innerHTML = '<div class="panel"><div class="panel-header"><span class="panel-title">'+companies.length+' Companies</span><button class="btn btn-primary" onclick="openCompanyModal(null)">+ Add Company</button></div>'+
+    '<div class="table-wrap"><table><thead><tr><th>Company</th><th>Industry</th><th>Location</th><th>Rating</th><th>Reviews</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
+    companies.map(function(co){
+      var rating = parseFloat(co.avg_rating)||0;
+      var stars = '★'.repeat(Math.round(rating))+'☆'.repeat(5-Math.round(rating));
+      return '<tr>'+
+        '<td><div class="td-company"><div class="td-logo">'+(co.emoji||'🏢')+'</div><div><div class="td-name">'+escHtml(co.name)+'</div><div class="td-sub">'+(co.website?'<a href="'+escHtml(co.website)+'" target="_blank" style="color:var(--accent);font-size:0.7rem;">↗</a>':'')+'</div></div></div></td>'+
+        '<td>'+escHtml(co.industry||'—')+'</td>'+
+        '<td style="font-size:0.8rem;color:var(--text-muted);">'+(co.city||'')+(co.country?', '+co.country:'')+'</td>'+
+        '<td><span class="stars-sm">'+stars+'</span> <span style="font-family:var(--syne);font-weight:700;">'+rating.toFixed(1)+'</span></td>'+
+        '<td style="font-family:var(--mono);font-size:0.78rem;">'+(co.review_count||0)+'</td>'+
+        '<td>'+
+          (co.is_active?'<span class="badge badge-green">ACTIVE</span>':'<span class="badge badge-gray">INACTIVE</span>')+
+          (co.is_certified_partner?' <span class="badge badge-yellow">CERT</span>':'')+
+          (co.is_trending?' <span class="badge badge-purple">TRENDING</span>':'')+
+        '</td>'+
+        '<td><div class="actions-group">'+
+          '<button class="action-btn action-btn-edit" onclick="openCompanyModal(\''+co.id+'\')">Edit</button>'+
+          '<button class="action-btn action-btn-reject" onclick="deleteCompany(\''+co.id+'\')">Delete</button>'+
+        '</div></td>'+
+      '</tr>';
+    }).join('')+
+  '</tbody></table></div></div>';
+}
+
+// ═══════════════════════════════════════════════════
+// USERS
+// ═══════════════════════════════════════════════════
+async function renderUsers() {
+  var c = document.getElementById('main-content');
+  if (!sb) { c.innerHTML='<div class="empty-state"><div class="empty-icon">👥</div><div>Connect Supabase to view users</div></div>'; return; }
+  // Fetch from reviews since Supabase Auth admin API needs service key
+  var { data } = await sb.from('reviews').select('author_name,created_at').order('created_at',{ascending:false}).limit(100);
+  var reviewCounts = {};
+  (data||[]).forEach(r=>{ reviewCounts[r.author_name||'Anonymous']=(reviewCounts[r.author_name||'Anonymous']||0)+1; });
+  var users = Object.entries(reviewCounts).map(([name,count])=>({name,count})).sort((a,b)=>b.count-a.count);
+  c.innerHTML = '<div class="panel"><div class="panel-header"><span class="panel-title">Top Reviewers (by review count)</span></div>'+
+    '<div class="table-wrap"><table><thead><tr><th>Reviewer</th><th>Reviews</th><th>Type</th></tr></thead><tbody>'+
+    users.slice(0,50).map(function(u){
+      return '<tr>'+
+        '<td><div class="td-name">'+escHtml(u.name)+'</div></td>'+
+        '<td style="font-family:var(--mono);">'+u.count+'</td>'+
+        '<td>'+(u.name==='Anonymous'?'<span class="badge badge-gray">ANON</span>':'<span class="badge badge-green">USER</span>')+'</td>'+
+      '</tr>';
+    }).join('')+
+  '</tbody></table></div></div>';
+}
+
+// ═══════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════
+function renderSettings() {
+  var cfg = JSON.parse(localStorage.getItem('wt_settings')||'{}');
+  var c = document.getElementById('main-content');
+  c.innerHTML = '<div style="max-width:540px;display:flex;flex-direction:column;gap:16px;">'+
+    '<div class="panel"><div class="panel-header"><span class="panel-title">Site Settings</span></div><div class="panel-body" style="display:flex;flex-direction:column;gap:14px;">'+
+      '<div class="form-group"><label>Site Name</label><input id="st-sitename" value="'+(cfg.siteName||'WorkTruth')+'" /></div>'+
+      '<div class="form-group"><label>Admin Email</label><input id="st-email" value="'+(cfg.adminEmail||ADMIN_EMAIL)+'" /></div>'+
+      '<div class="form-group"><label>Auto-approve reviews from verified users</label>'+
+        '<select id="st-autoapprove"><option value="no">No (all go to queue)</option><option value="yes"'+(cfg.autoApprove==='yes'?' selected':'')+'>Yes</option></select>'+
+      '</div>'+
+    '</div></div>'+
+    '<div class="panel"><div class="panel-header"><span class="panel-title">Certification Rules</span></div><div class="panel-body" style="display:flex;flex-direction:column;gap:14px;">'+
+      '<div class="form-group"><label>Minimum review body length for certification (chars)</label><input id="st-minlen" type="number" value="'+(cfg.minLen||150)+'" /></div>'+
+      '<div class="form-group"><label>Required: pros and cons fields</label>'+
+        '<select id="st-proscons"><option value="yes"'+(cfg.proscons!=='no'?' selected':'')+'>Required for certification</option><option value="no">Optional</option></select>'+
+      '</div>'+
+    '</div></div>'+
+    '<button class="btn btn-primary" style="padding:12px;" onclick="saveSettings()">Save Settings</button>'+
+  '</div>';
+}
+
+function saveSettings() {
+  if (document.getElementById('st-sitename')) {
+    var cfg = {
+      siteName: document.getElementById('st-sitename').value,
+      adminEmail: document.getElementById('st-email').value,
+      autoApprove: document.getElementById('st-autoapprove').value,
+      minLen: document.getElementById('st-minlen').value,
+      proscons: document.getElementById('st-proscons').value,
+    };
+    localStorage.setItem('wt_settings', JSON.stringify(cfg));
+    toast('Settings saved ✓', 'success');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// REVIEWS TABLE HELPER
+// ═══════════════════════════════════════════════════
+function reviewsTable(reviews, mode) {
+  if (!reviews.length) return '<div class="empty-state"><div class="empty-icon">📝</div><div>Nothing here.</div></div>';
+  return '<table><thead><tr>'+
+    '<th>Company</th><th>Reviewer</th><th>Rating</th><th>Review</th><th>Date</th><th>Status</th><th>Actions</th>'+
+  '</tr></thead><tbody>'+
+  reviews.map(function(r){
+    var co = r.companies || {};
+    var rating = r.rating_overall||0;
+    var stars = '★'.repeat(Math.round(rating))+'☆'.repeat(5-Math.round(rating));
+    var date = r.created_at ? new Date(r.created_at).toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'}) : '-';
+    var statusBadge = r.status==='approved'?'<span class="badge badge-green">APPROVED</span>':
+                      r.status==='rejected'?'<span class="badge badge-red">REJECTED</span>':
+                      '<span class="badge badge-yellow">PENDING</span>';
+    var certBadge = r.is_certified ? '<span class="badge badge-green" style="margin-left:3px;">CERT</span>' : '';
+    var actions = '';
+    if (mode==='pending') {
+      actions = '<div class="actions-group">'+
+        '<button class="action-btn action-btn-approve" onclick="approveReview(\''+r.id+'\')">Approve</button>'+
+        '<button class="action-btn action-btn-certify" onclick="certifyReview(\''+r.id+'\')">Approve+Certify</button>'+
+        '<button class="action-btn action-btn-reject" onclick="rejectReview(\''+r.id+'\')">Reject</button>'+
+        '<button class="action-btn action-btn-edit" onclick="viewReview(\''+r.id+'\')">View</button>'+
+      '</div>';
+    } else if (mode==='certify') {
+      actions = '<div class="actions-group">'+
+        '<button class="action-btn action-btn-certify" onclick="certifyReview(\''+r.id+'\')">Certify ✓</button>'+
+        '<button class="action-btn action-btn-edit" onclick="viewReview(\''+r.id+'\')">View</button>'+
+      '</div>';
+    } else {
+      actions = '<div class="actions-group">'+
+        (r.status!=='approved'?'<button class="action-btn action-btn-approve" onclick="approveReview(\''+r.id+'\')">Approve</button>':'')+
+        (!r.is_certified?'<button class="action-btn action-btn-certify" onclick="certifyReview(\''+r.id+'\')">Certify</button>':'')+
+        (r.status!=='rejected'?'<button class="action-btn action-btn-reject" onclick="rejectReview(\''+r.id+'\')">Reject</button>':'')+
+        '<button class="action-btn action-btn-edit" onclick="viewReview(\''+r.id+'\')">View</button>'+
+      '</div>';
+    }
+    return '<tr>'+
+      '<td><div class="td-company"><div class="td-logo">'+(co.emoji||'🏢')+'</div><div>'+
+        '<div class="td-name">'+escHtml(co.name||r.company_name||'—')+'</div>'+
+        '<div class="td-sub">'+escHtml(r.role||'')+(r.employment_status?' · '+r.employment_status:'')+'</div></div></div></td>'+
+      '<td style="font-family:var(--mono);font-size:0.75rem;color:var(--text-muted);">'+escHtml(r.author_name||'Anonymous')+'</td>'+
+      '<td><span class="stars-sm">'+stars+'</span></td>'+
+      '<td><div class="td-name" style="font-size:0.82rem;">'+escHtml((r.title||'').slice(0,60))+'</div>'+
+        '<div class="review-preview">'+escHtml((r.body||'').slice(0,120))+'</div></td>'+
+      '<td style="font-family:var(--mono);font-size:0.72rem;color:var(--text-muted);white-space:nowrap;">'+date+'</td>'+
+      '<td>'+statusBadge+certBadge+'</td>'+
+      '<td>'+actions+'</td>'+
+    '</tr>';
+  }).join('')+
+  '</tbody></table>';
+}
+
+// ═══════════════════════════════════════════════════
+// REVIEW ACTIONS
+// ═══════════════════════════════════════════════════
+async function approveReview(id) {
+  if (!sb) { toast('DB not connected','warn'); return; }
+  var { error } = await sb.from('reviews').update({ status:'approved' }).eq('id',id);
+  if (error) return toast('Error: '+error.message,'error');
+  toast('Review approved ✓','success');
+  await updateCompanyStats(id);
+  render(currentSection);
+  loadBadges();
+}
+
+async function certifyReview(id) {
+  if (!sb) { toast('DB not connected','warn'); return; }
+  var { error } = await sb.from('reviews').update({ status:'approved', is_certified:true }).eq('id',id);
+  if (error) return toast('Error: '+error.message,'error');
+  toast('Review certified ✓','success');
+  await updateCompanyStats(id);
+  render(currentSection);
+  loadBadges();
+}
+
+async function rejectReview(id, reportId) {
+  if (!confirm('Reject and remove this review?')) return;
+  if (!sb) { toast('DB not connected','warn'); return; }
+  var { error } = await sb.from('reviews').update({ status:'rejected' }).eq('id',id);
+  if (error) return toast('Error: '+error.message,'error');
+  if (reportId) await sb.from('review_reports').update({ resolved:true }).eq('id',reportId);
+  toast('Review rejected','warn');
+  render(currentSection);
+  loadBadges();
+}
+
+async function resolveReport(reportId) {
+  if (!sb) { toast('DB not connected','warn'); return; }
+  await sb.from('review_reports').update({ resolved:true }).eq('id',reportId);
+  toast('Report dismissed ✓','success');
+  render(currentSection);
+  loadBadges();
+}
+
+async function viewReview(id) {
+  var review;
+  if (sb) {
+    var { data } = await sb.from('reviews').select('*').eq('id',id).single();
+    review = data;
+  } else review = getDemoReviews('all').find(r=>r.id===id);
+  if (!review) { toast('Review not found','error'); return; }
+  var c = document.getElementById('review-view-content');
+  var subs = [{l:'WLB',v:review.rating_wlb},{l:'SALARY',v:review.rating_salary},{l:'MGMT',v:review.rating_mgmt},{l:'GROWTH',v:review.rating_growth}].filter(s=>s.v);
+  c.innerHTML =
+    '<div style="display:flex;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">'+
+      '<div><div style="font-family:var(--syne);font-weight:800;font-size:1.1rem;">'+escHtml(review.title||'Untitled')+'</div>'+
+        '<div style="color:var(--text-muted);font-size:0.8rem;margin-top:3px;">'+escHtml(review.company_name||'')+'</div></div>'+
+      '<div style="display:flex;gap:6px;">'+
+        (review.status!=='approved'?'<button class="action-btn action-btn-approve" onclick="approveReview(\''+review.id+'\')">Approve</button>':'')+
+        (!review.is_certified?'<button class="action-btn action-btn-certify" onclick="certifyReview(\''+review.id+'\')">Certify</button>':'')+
+        (review.status!=='rejected'?'<button class="action-btn action-btn-reject" onclick="rejectReview(\''+review.id+'\')">Reject</button>':'')+
+      '</div>'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">'+
+      '<span class="badge '+(review.status==='approved'?'badge-green':review.status==='rejected'?'badge-red':'badge-yellow')+'">'+review.status+'</span>'+
+      (review.is_certified?'<span class="badge badge-green">CERTIFIED</span>':'')+
+      '<span class="badge badge-gray">'+escHtml(review.role||'')+'</span>'+
+      '<span class="badge badge-gray">'+(review.employment_status||'')+'</span>'+
+    '</div>'+
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">'+
+      '<span style="color:var(--accent);font-size:1.1rem;">'+'★'.repeat(review.rating_overall||0)+'☆'.repeat(5-(review.rating_overall||0))+'</span>'+
+      '<span style="font-family:var(--syne);font-weight:800;">'+(review.rating_overall||0)+'/5</span>'+
+    '</div>'+
+    '<div class="review-full-body">'+escHtml(review.body||'')+'</div>'+
+    (review.pros||review.cons?
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0;">'+
+        (review.pros?'<div style="background:rgba(71,255,212,0.05);border:1px solid rgba(71,255,212,0.12);padding:10px;border-radius:8px;font-size:0.8rem;"><div style="font-family:var(--mono);font-size:0.63rem;color:var(--accent2);margin-bottom:4px;">PROS</div>'+escHtml(review.pros)+'</div>':'')+
+        (review.cons?'<div style="background:rgba(255,107,107,0.05);border:1px solid rgba(255,107,107,0.12);padding:10px;border-radius:8px;font-size:0.8rem;"><div style="font-family:var(--mono);font-size:0.63rem;color:var(--accent3);margin-bottom:4px;">CONS</div>'+escHtml(review.cons)+'</div>':'')+
+      '</div>':'')+
+    (subs.length?'<div class="ratings-mini">'+subs.map(s=>'<div class="rm-item">'+s.l+': <span>'+'★'.repeat(s.v)+'</span></div>').join('')+'</div>':'')+
+    '<div style="font-family:var(--mono);font-size:0.7rem;color:var(--text-dim);margin-top:14px;">'+
+      'By: '+escHtml(review.author_name||'Anonymous')+' · '+(review.created_at?new Date(review.created_at).toLocaleString():'')+
+      (review.location?' · 📍'+escHtml(review.location):'')+
+    '</div>';
+  openModal('review-view-modal');
+}
+
+// ═══════════════════════════════════════════════════
+// COMPANY MODAL
+// ═══════════════════════════════════════════════════
+function openCompanyModal(id) {
+  var isEdit = !!id;
+  document.getElementById('company-modal-title').textContent = isEdit ? 'Edit Company' : 'Add Company';
+  if (isEdit) {
+    var co = allData.companies.find(c=>c.id===id);
+    if (!co) { toast('Load companies first','warn'); return; }
+    document.getElementById('cm-id').value = co.id;
+    document.getElementById('cm-name').value = co.name||'';
+    document.getElementById('cm-emoji').value = co.emoji||'🏢';
+    document.getElementById('cm-industry').value = co.industry||'Technology';
+    document.getElementById('cm-city').value = co.city||'';
+    document.getElementById('cm-country').value = co.country||'';
+    document.getElementById('cm-size').value = co.size_range||'11-50';
+    document.getElementById('cm-lat').value = co.lat||'';
+    document.getElementById('cm-lng').value = co.lng||'';
+    document.getElementById('cm-tagline').value = co.tagline||'';
+    document.getElementById('cm-desc').value = co.description||'';
+    document.getElementById('cm-website').value = co.website||'';
+    document.getElementById('cm-founded').value = co.founded_year||'';
+    document.getElementById('cm-certified').checked = !!co.is_certified_partner;
+    document.getElementById('cm-trending').checked = !!co.is_trending;
+    document.getElementById('cm-active').checked = co.is_active !== false;
+  } else {
+    ['cm-id','cm-name','cm-tagline','cm-desc','cm-website','cm-founded','cm-city','cm-country','cm-lat','cm-lng'].forEach(id=>{ var el=document.getElementById(id); if(el) el.value=''; });
+    document.getElementById('cm-emoji').value = '🏢';
+    document.getElementById('cm-certified').checked = false;
+    document.getElementById('cm-trending').checked = false;
+    document.getElementById('cm-active').checked = true;
+  }
+  openModal('company-modal');
+}
+
+async function saveCompany() {
+  var id = document.getElementById('cm-id').value;
+  var payload = {
+    name:               document.getElementById('cm-name').value.trim(),
+    emoji:              document.getElementById('cm-emoji').value.trim()||'🏢',
+    industry:           document.getElementById('cm-industry').value,
+    city:               document.getElementById('cm-city').value.trim(),
+    country:            document.getElementById('cm-country').value.trim(),
+    size_range:         document.getElementById('cm-size').value,
+    lat:                parseFloat(document.getElementById('cm-lat').value)||null,
+    lng:                parseFloat(document.getElementById('cm-lng').value)||null,
+    tagline:            document.getElementById('cm-tagline').value.trim(),
+    description:        document.getElementById('cm-desc').value.trim(),
+    website:            document.getElementById('cm-website').value.trim(),
+    founded_year:       parseInt(document.getElementById('cm-founded').value)||null,
+    is_certified_partner: document.getElementById('cm-certified').checked,
+    is_trending:        document.getElementById('cm-trending').checked,
+    is_active:          document.getElementById('cm-active').checked,
+  };
+  if (!payload.name) return toast('Company name required','error');
+  if (!sb) { toast('DB not connected','warn'); closeModal('company-modal'); return; }
+  var { error } = id ?
+    await sb.from('companies').update(payload).eq('id',id) :
+    await sb.from('companies').insert([payload]);
+  if (error) return toast('Error: '+error.message,'error');
+  toast((id?'Company updated':'Company added')+' ✓','success');
+  closeModal('company-modal');
+  renderCompanies();
+}
+
+async function deleteCompany(id) {
+  if (!confirm('Delete this company and all its reviews?')) return;
+  if (!sb) { toast('DB not connected','warn'); return; }
+  await sb.from('reviews').update({ company_id: null }).eq('company_id', id);
+  var { error } = await sb.from('companies').delete().eq('id',id);
+  if (error) return toast('Error: '+error.message,'error');
+  toast('Company deleted','warn');
+  renderCompanies();
+}
+
+// ═══════════════════════════════════════════════════
+// STATS UPDATE (after review approval)
+// ═══════════════════════════════════════════════════
+async function updateCompanyStats(reviewId) {
+  if (!sb) return;
+  // Re-aggregate company stats using SQL function
+  var { data } = await sb.from('reviews').select('company_id,rating_overall,rating_wlb,rating_salary,rating_mgmt,rating_growth').eq('id',reviewId).single();
+  if (!data || !data.company_id) return;
+  await sb.rpc('recalculate_company_stats', { cid: data.company_id });
+}
+
+// ═══════════════════════════════════════════════════
+// BADGES
+// ═══════════════════════════════════════════════════
+async function loadBadges() {
+  if (!sb) return;
+  var [p, rep] = await Promise.all([
+    sb.from('reviews').select('id',{count:'exact',head:true}).eq('status','pending'),
+    sb.from('review_reports').select('id',{count:'exact',head:true}).eq('resolved',false),
+  ]);
+  document.getElementById('pending-badge').textContent = p.count||0;
+  document.getElementById('reported-badge').textContent = rep.count||0;
+}
+
+// ═══════════════════════════════════════════════════
+// FILTERS & SEARCH
+// ═══════════════════════════════════════════════════
+function setFilter(key, val) {
+  filters[key] = val;
+  renderAllReviews();
+}
+
+function handleGlobalSearch(val) {
+  // Debounce would be ideal but keeping it simple
+}
+
+// ═══════════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════════
+async function exportData() {
+  if (!sb) { toast('DB not connected','warn'); return; }
+  var { data } = await sb.from('reviews').select('*').eq('status','approved').order('created_at',{ascending:false});
+  if (!data) return;
+  var csv = 'id,company,role,rating,certified,title,body,date\n'+
+    (data||[]).map(r=>[r.id,'"'+(r.company_name||'')+'"','"'+(r.role||'')+'"',r.rating_overall,r.is_certified,'"'+(r.title||'').replace(/"/g,'""')+'"','"'+(r.body||'').replace(/"/g,'""').slice(0,200)+'"',r.created_at].join(',')).join('\n');
+  var blob = new Blob([csv],{type:'text/csv'});
+  var a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='worktruth_reviews.csv'; a.click();
+  toast('Exported ✓','success');
+}
+
+// ═══════════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════════
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.addEventListener('click', function(e){ if(e.target.classList.contains('modal-overlay')) closeModal(e.target.id); });
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+function toast(msg, type) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'on' + (type?' '+type:'');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.className='',3500);
+}
+
+// ═══════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════════════
+// DEMO DATA
+// ═══════════════════════════════════════════════════
+function getDemoReviews(type) {
+  var reviews = [
+    {id:'r1',company_name:'Nexovate Tech',companies:{name:'Nexovate Tech',emoji:'💻'},role:'Senior Engineer',employment_status:'current',author_name:'dev_anon',title:'The best tech job I\'ve had in 12 years',body:'Genuinely remote-first culture, not just words. Management trusts you to deliver.',pros:'Autonomy, remote-first',cons:'Occasional chaos',rating_overall:5,rating_wlb:4,rating_salary:5,rating_mgmt:5,rating_growth:5,is_certified:true,status:'approved',helpful_count:47,created_at:'2025-03-12T09:00:00Z'},
+    {id:'r2',company_name:'TrueBank Group',companies:{name:'TrueBank Group',emoji:'🏦'},role:'Junior Analyst',employment_status:'former',author_name:'Anonymous',title:'Golden cage — pay is great, everything else is brutal',body:'They will pay you well. 80-hour weeks are normal. I left after 14 months for my health.',pros:'Compensation, CV prestige',cons:'Zero work-life balance, toxic',rating_overall:2,rating_wlb:1,rating_salary:5,rating_mgmt:2,rating_growth:3,is_certified:false,status:'pending',helpful_count:133,created_at:'2025-02-28T15:30:00Z'},
+    {id:'r3',company_name:'EduPlus Academy',companies:{name:'EduPlus Academy',emoji:'📚'},role:'Curriculum Designer',employment_status:'current',author_name:'teacher_m',title:'Small team, huge impact',body:'EduPlus is the rare employer that actually listens to staff.',pros:'Meaningful work, supportive',cons:'Salary slightly below market',rating_overall:5,rating_wlb:5,rating_salary:3,rating_mgmt:5,rating_growth:4,is_certified:true,status:'approved',helpful_count:29,created_at:'2025-03-05T11:00:00Z'},
+  ];
+  if (type==='pending') return reviews.filter(r=>r.status==='pending');
+  if (type==='approved') return reviews.filter(r=>r.status==='approved');
+  return reviews;
+}
+
+function getDemoCompanies() {
+  return [
+    {id:'d1',name:'Nexovate Tech',industry:'Technology',emoji:'💻',city:'Athens',country:'Greece',lat:37.98,lng:23.73,avg_rating:4.3,review_count:142,is_certified_partner:true,is_trending:true,is_active:true,tagline:'Great culture and fast growth.'},
+    {id:'d2',name:'MedCore Hospitals',industry:'Healthcare',emoji:'🏥',city:'Berlin',country:'Germany',lat:52.52,lng:13.40,avg_rating:3.1,review_count:87,is_certified_partner:false,is_active:true},
+    {id:'d3',name:'TrueBank Group',industry:'Finance',emoji:'🏦',city:'London',country:'UK',lat:51.50,lng:-0.12,avg_rating:2.4,review_count:213,is_certified_partner:false,is_active:true},
+  ];
+}
+</script>
+</body>
+</html>
