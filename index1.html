@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="day">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Legit Advisor · Honest Employer Reviews</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,700&family=Instrument+Serif:ital@0;1&family=Noto+Sans+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+/* ═══════════════════════════════════════════════════
+   TOKENS — DAY (default)
+═══════════════════════════════════════════════════ */
+:root,[data-theme="day"]{
+  --bg:#F7F6F1;
+  --surface:#FFFFFF;
+  --surface2:#F0EFE8;
+  --surface3:#E5E3D8;
+  --border:rgba(60,55,40,0.11);
+  --border-strong:rgba(60,55,40,0.20);
+  --text:#2C2A22;
+  --text-muted:#6B6454;
+  --text-dim:#B0A890;
+
+  --yellow:#F5D000;
+  --yellow-dk:#C9AA00;
+  --yellow-lt:#FFFBE0;
+
+  --coral:#E8402A;
+  --coral-lt:#FFF0EE;
+
+  --ink:#2C2A22;
+
+  --map-filter:saturate(0.8) brightness(1.05) contrast(0.9);
+  --nav-bg:rgba(247,246,241,0.94);
+  --card-shadow:0 2px 16px rgba(44,42,34,0.08);
+  --hero-overlay:linear-gradient(to right, rgba(247,246,241,0.0) 0%, rgba(247,246,241,0.0) 100%);
+  --panel-bg:rgba(255,255,255,0.93);
+  --panel-border:rgba(60,55,40,0.15);
+}
+
+/* ═══════════════════════════════════════════════════
+   TOKENS — NIGHT
+═══════════════════════════════════════════════════ */
+[data-theme="night"]{
+  --bg:#12110D;
+  --surface:#1C1A14;
+  --surface2:#242118;
+  --surface3:#2E2B1F;
+  --border:rgba(245,208,0,0.10);
+  --border-strong:rgba(245,208,0,0.18);
+  --text:#EDE8D5;
+  --text-muted:#8C8470;
+  --text-dim:#4A4538;
+
+  --yellow:#F5D000;
+  --yellow-dk:#C9AA00;
+  --yellow-lt:rgba(245,208,0,0.12);
+
+  --coral:#E8402A;
+  --coral-lt:rgba(232,64,42,0.12);
+
+  --ink:#EDE8D5;
+
+  --map-filter:brightness(0.55) saturate(0.5) hue-rotate(185deg) invert(1) contrast(0.85);
+  --nav-bg:rgba(18,17,13,0.95);
+  --card-shadow:0 2px 20px rgba(0,0,0,0.45);
+  --hero-overlay:linear-gradient(to right, rgba(18,17,13,0.0) 0%, rgba(18,17,13,0.0) 100%);
+  --panel-bg:rgba(28,26,20,0.96);
+  --panel-border:rgba(245,208,0,0.18);
+}
+
+/* ═══════════════════════════════════════════════════
+   BASE
+═══════════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;font-size:15px;min-height:100vh;overflow-x:hidden;transition:background 0.4s,color 0.4s;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--surface2);}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+
+/* ═══════════════════════════════════════════════════
+   NAV
+═══════════════════════════════════════════════════ */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:300;
+  background:var(--nav-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:0 20px;height:56px;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:background 0.4s,border-color 0.4s;
+}
+.logo{
+  font-family:'Nunito',sans-serif;font-weight:900;font-size:1.3rem;
+  color:var(--text);letter-spacing:-0.3px;text-decoration:none;
+  display:flex;align-items:center;gap:2px;
+}
+.logo-legit{color:var(--text);}
+.logo-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--yellow);margin:0 1px 2px;}
+.logo-advisor{color:var(--coral);}
+
+.nav-right{display:flex;align-items:center;gap:8px;}
+.nav-btn{
+  padding:6px 14px;border-radius:8px;
+  font-family:'Nunito',sans-serif;font-size:0.82rem;font-weight:700;
+  cursor:pointer;border:1.5px solid var(--border-strong);
+  background:transparent;color:var(--text-muted);
+  transition:all 0.17s;
+}
+.nav-btn:hover{background:var(--surface2);color:var(--text);border-color:var(--text-dim);}
+.nav-btn-accent{background:var(--yellow);color:var(--ink);border-color:var(--yellow-dk);}
+.nav-btn-accent:hover{background:var(--yellow-dk);color:var(--ink);border-color:var(--yellow-dk);}
+
+/* DAY/NIGHT TOGGLE */
+.theme-toggle{
+  width:52px;height:28px;border-radius:14px;
+  background:var(--surface2);border:1.5px solid var(--border-strong);
+  cursor:pointer;position:relative;transition:all 0.3s;
+  flex-shrink:0;
+}
+.theme-toggle-knob{
+  position:absolute;top:2px;left:2px;
+  width:20px;height:20px;border-radius:50%;
+  background:var(--yellow);
+  transition:transform 0.3s cubic-bezier(.68,-.55,.27,1.55), background 0.3s;
+  display:flex;align-items:center;justify-content:center;font-size:11px;
+  box-shadow:0 1px 4px rgba(0,0,0,0.2);
+}
+[data-theme="night"] .theme-toggle-knob{
+  transform:translateX(24px);
+  background:var(--surface3);
+}
+.theme-toggle-label{
+  font-family:'Noto Sans Mono',monospace;font-size:0.58rem;font-weight:500;
+  color:var(--text-dim);letter-spacing:0.5px;text-transform:uppercase;
+  white-space:nowrap;
+}
+.toggle-wrap{display:flex;align-items:center;gap:7px;}
+
+#nav-auth,#nav-user{display:flex;align-items:center;gap:6px;}
+#nav-user{display:none;}
+.user-chip{
+  display:flex;align-items:center;gap:7px;padding:4px 12px 4px 4px;
+  border-radius:20px;background:var(--surface2);border:1.5px solid var(--border-strong);
+  cursor:pointer;transition:all 0.15s;
+}
+.user-chip:hover{border-color:var(--text-dim);}
+.user-av{
+  width:24px;height:24px;border-radius:50%;
+  background:var(--yellow);display:flex;align-items:center;justify-content:center;
+  font-size:0.7rem;font-weight:800;color:var(--ink);
+}
+.user-name{font-size:0.78rem;font-weight:700;color:var(--text-muted);}
+
+/* ═══════════════════════════════════════════════════
+   MAP HERO — full viewport
+═══════════════════════════════════════════════════ */
+#hero-map-wrap{
+  position:fixed;top:0;left:0;right:0;bottom:0;z-index:0;
+}
+#hero-map{
+  width:100%;height:100%;
+  filter:var(--map-filter);
+  transition:filter 0.6s;
+}
+/* gradient fade at bottom so page content bleeds in */
+#hero-map-wrap::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:180px;
+  background:linear-gradient(to top,var(--bg) 0%,transparent 100%);
+  pointer-events:none;z-index:2;
+}
+
+/* ═══════════════════════════════════════════════════
+   HERO OVERLAY — floats above the map
+═══════════════════════════════════════════════════ */
+#hero-overlay{
+  position:relative;z-index:10;
+  min-height:100vh;
+  display:flex;align-items:center;
+  padding:80px 24px 60px;
+  pointer-events:none; /* let map be clickable around the panel */
+}
+#hero-overlay > *{pointer-events:auto;}
+.wrap{max-width:1100px;margin:0 auto;width:100%;}
+
+.hero-layout{
+  display:grid;
+  grid-template-columns:1fr 420px;
+  gap:40px;
+  align-items:center;
+}
+
+/* LEFT — tagline */
+.hero-left{}
+.hero-pill{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:5px 13px;border-radius:20px;
+  background:var(--yellow);color:var(--ink);
+  font-size:0.7rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;
+  font-family:'Noto Sans Mono',monospace;
+  margin-bottom:22px;
+  box-shadow:2px 2px 0 var(--yellow-dk);
+}
+.hero-pill-dot{width:5px;height:5px;border-radius:50%;background:var(--coral);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+.hero-h1{
+  font-family:'Instrument Serif',serif;
+  font-weight:400;
+  font-size:clamp(2.6rem,5.5vw,4.6rem);
+  line-height:1.05;
+  letter-spacing:-1.5px;
+  color:var(--text);
+  margin-bottom:16px;
+  text-shadow:0 2px 20px rgba(247,246,241,0.7);
+}
+[data-theme="night"] .hero-h1{text-shadow:0 2px 20px rgba(12,11,9,0.9);}
+.hero-h1 em{font-style:italic;color:var(--coral);}
+
+.hero-sub{
+  color:var(--text-muted);font-size:1rem;line-height:1.65;
+  max-width:400px;font-weight:500;
+  background:var(--panel-bg);
+  display:inline-block;padding:10px 16px;border-radius:10px;
+  border:1px solid var(--border);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+
+.hero-stats{display:flex;gap:28px;margin-top:24px;flex-wrap:wrap;}
+.hero-stat{
+  display:flex;flex-direction:column;
+  background:var(--panel-bg);border:1px solid var(--border);
+  border-radius:10px;padding:10px 16px;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+.hero-stat-num{font-family:'Nunito',sans-serif;font-weight:900;font-size:1.5rem;color:var(--text);letter-spacing:-1px;line-height:1;}
+.hero-stat-label{font-size:0.7rem;color:var(--text-muted);font-weight:700;margin-top:3px;text-transform:uppercase;letter-spacing:0.5px;}
+
+/* ═══════════════════════════════════════════════════
+   REVIEW FORM PANEL — floats on right over map
+═══════════════════════════════════════════════════ */
+.quick-review-panel{
+  background:var(--panel-bg);
+  border:1.5px solid var(--panel-border);
+  border-radius:20px;
+  padding:26px 24px 24px;
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  box-shadow:0 8px 48px rgba(0,0,0,0.18),0 2px 8px rgba(0,0,0,0.08);
+  transition:background 0.4s,border-color 0.4s;
+}
+.qrp-title{
+  font-family:'Instrument Serif',serif;
+  font-weight:400;font-size:1.35rem;
+  color:var(--text);margin-bottom:4px;letter-spacing:-0.3px;
+}
+.qrp-sub{font-size:0.78rem;color:var(--text-muted);font-weight:600;margin-bottom:20px;}
+
+/* steps */
+.qrp-step{display:none;}
+.qrp-step.active{display:block;}
+
+.form-group{margin-bottom:14px;}
+.form-label{
+  display:block;font-size:0.72rem;font-weight:800;
+  color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;
+  margin-bottom:5px;
+}
+.form-input{
+  width:100%;padding:10px 13px;
+  background:var(--surface);border:1.5px solid var(--border-strong);
+  border-radius:10px;color:var(--text);
+  font-family:'Nunito',sans-serif;font-size:0.92rem;font-weight:600;
+  outline:none;transition:border-color 0.18s,box-shadow 0.18s;
+  -webkit-appearance:none;
+}
+.form-input::placeholder{color:var(--text-dim);font-weight:400;}
+.form-input:focus{border-color:var(--yellow-dk);box-shadow:0 0 0 3px rgba(245,208,0,0.15);}
+.form-input-sm{padding:8px 11px;font-size:0.85rem;}
+textarea.form-input{resize:vertical;min-height:80px;line-height:1.5;}
+select.form-input{cursor:pointer;}
+select.form-input option{background:var(--surface);color:var(--text);}
+
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* star picker */
+.star-row{display:flex;flex-direction:row-reverse;gap:2px;margin-top:2px;}
+.star-row input{display:none;}
+.star-row label{font-size:1.6rem;cursor:pointer;color:var(--surface3);transition:color 0.1s;line-height:1;}
+.star-row label:hover,.star-row label:hover~label,.star-row input:checked~label{color:var(--yellow);}
+[data-theme="night"] .star-row label{color:var(--surface3);}
+
+/* category pills */
+.sub-stars{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.sub-star-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;}
+.sub-star-label{font-size:0.65rem;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;}
+.sub-star-row{display:flex;flex-direction:row-reverse;gap:1px;}
+.sub-star-row input{display:none;}
+.sub-star-row label{font-size:1.1rem;cursor:pointer;color:var(--surface3);transition:color 0.1s;}
+.sub-star-row label:hover,.sub-star-row label:hover~label,.sub-star-row input:checked~label{color:var(--yellow);}
+
+/* anon note */
+.anon-strip{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 12px;border-radius:8px;
+  background:var(--yellow-lt);border:1px solid var(--yellow-dk);
+  font-size:0.76rem;color:var(--ink);font-weight:600;
+  margin-bottom:16px;
+}
+
+/* progress dots */
+.qrp-progress{display:flex;justify-content:center;gap:6px;margin-bottom:20px;}
+.qrp-dot{width:6px;height:6px;border-radius:50%;background:var(--border-strong);transition:all 0.25s;}
+.qrp-dot.active{background:var(--yellow);width:20px;border-radius:3px;}
+.qrp-dot.done{background:var(--coral);}
+
+/* buttons */
+.btn{
+  padding:10px 20px;border-radius:10px;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:0.88rem;
+  cursor:pointer;border:none;transition:all 0.17s;
+}
+.btn-yellow{background:var(--yellow);color:var(--ink);border:1.5px solid var(--yellow-dk);}
+.btn-yellow:hover{background:var(--yellow-dk);transform:translateY(-1px);}
+.btn-coral{background:var(--coral);color:#fff;border:1.5px solid #c43520;}
+.btn-coral:hover{background:#c43520;}
+.btn-ghost{background:transparent;color:var(--text-muted);border:1.5px solid var(--border-strong);}
+.btn-ghost:hover{background:var(--surface2);color:var(--text);}
+.btn-full{width:100%;padding:12px;}
+.btn-row{display:flex;gap:8px;margin-top:4px;}
+.btn-row .btn{flex:1;}
+.btn:disabled{opacity:0.5;cursor:not-allowed;transform:none!important;}
+
+/* ═══════════════════════════════════════════════════
+   BELOW-FOLD PAGE CONTENT
+═══════════════════════════════════════════════════ */
+#page-content{
+  position:relative;z-index:10;
+  background:var(--bg);
+  margin-top:100vh; /* starts right where viewport ends */
+  transition:background 0.4s;
+}
+
+/* search bar belt */
+.search-belt{
+  background:var(--text);
+  padding:20px 24px;
+  display:flex;align-items:center;
+  gap:0;
+}
+[data-theme="night"] .search-belt{background:var(--surface2);}
+.search-belt-inner{
+  max-width:1100px;margin:0 auto;width:100%;
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+}
+.search-belt-label{
+  font-family:'Instrument Serif',serif;font-size:1.1rem;font-style:italic;
+  color:var(--yellow);white-space:nowrap;
+}
+[data-theme="night"] .search-belt-label{color:var(--yellow);}
+.search-field-wrap{flex:1;min-width:200px;position:relative;}
+.search-field{
+  width:100%;padding:10px 16px;
+  background:var(--surface);border:none;
+  border-radius:8px;color:var(--text);
+  font-family:'Nunito',sans-serif;font-size:0.92rem;font-weight:600;
+  outline:none;
+}
+[data-theme="night"] .search-field{background:var(--surface3);}
+.search-field::placeholder{color:var(--text-dim);font-weight:400;}
+.search-sug{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;
+  background:var(--surface);border:2px solid var(--yellow-dk);
+  border-radius:10px;overflow:hidden;z-index:200;display:none;
+  box-shadow:3px 3px 0 var(--yellow-dk);
+}
+.search-sug.open{display:block;}
+.sug-row{padding:10px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:0.88rem;font-weight:600;color:var(--text);}
+.sug-row:hover{background:var(--yellow-lt);}
+.sug-meta{font-size:0.72rem;color:var(--text-muted);font-weight:500;}
+.search-go{
+  padding:10px 22px;background:var(--yellow);color:var(--ink);
+  border:none;border-radius:8px;font-family:'Nunito',sans-serif;
+  font-weight:800;font-size:0.88rem;cursor:pointer;white-space:nowrap;
+  transition:background 0.15s;
+}
+.search-go:hover{background:var(--yellow-dk);}
+
+/* SECTIONS */
+.section{padding:64px 24px;}
+.section-inner{max-width:1100px;margin:0 auto;}
+.sec-label{
+  font-family:'Noto Sans Mono',monospace;font-size:0.68rem;font-weight:500;
+  color:var(--coral);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;
+}
+.sec-title{
+  font-family:'Instrument Serif',serif;font-weight:400;
+  font-size:clamp(1.7rem,3vw,2.5rem);letter-spacing:-0.5px;
+  color:var(--text);margin-bottom:6px;
+}
+.sec-sub{color:var(--text-muted);font-size:0.95rem;line-height:1.65;max-width:480px;font-weight:500;}
+
+/* COMPANIES GRID */
+.cos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;margin-top:36px;}
+.co-card{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:14px;padding:18px;cursor:pointer;
+  transition:all 0.18s;position:relative;overflow:hidden;
+}
+.co-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--yellow),var(--coral));
+  opacity:0;transition:opacity 0.18s;
+}
+.co-card:hover{border-color:var(--yellow-dk);transform:translateY(-2px);box-shadow:var(--card-shadow);}
+.co-card:hover::after{opacity:1;}
+.co-card-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.co-logo{
+  width:44px;height:44px;border-radius:10px;
+  background:var(--yellow-lt);border:1.5px solid var(--border-strong);
+  display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+  flex-shrink:0;
+}
+.co-name{font-weight:800;font-size:0.95rem;color:var(--text);margin-bottom:2px;}
+.co-ind{color:var(--text-muted);font-size:0.75rem;font-weight:600;}
+.co-badges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+.badge{
+  padding:2px 8px;border-radius:5px;
+  font-size:0.66rem;font-weight:800;
+  font-family:'Nunito',sans-serif;
+}
+.badge-cert{background:var(--text);color:var(--yellow);}
+[data-theme="night"] .badge-cert{background:var(--yellow);color:var(--ink);}
+.badge-trend{background:var(--yellow);color:var(--ink);}
+.badge-warn{background:var(--coral);color:#fff;}
+.badge-loc{background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);}
+.co-rating{display:flex;align-items:center;gap:8px;}
+.co-stars{color:var(--yellow-dk);font-size:0.85rem;letter-spacing:0.5px;}
+.co-score{font-weight:900;font-size:1.05rem;color:var(--text);}
+.co-count{color:var(--text-dim);font-size:0.75rem;font-weight:600;}
+.co-snip{color:var(--text-muted);font-size:0.8rem;line-height:1.5;margin-top:9px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-weight:500;}
+
+/* REVIEWS SECTION */
+.reviews-section{background:var(--surface2);transition:background 0.4s;}
+.reviews-controls{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:24px;}
+.filter-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{
+  padding:5px 13px;border-radius:6px;
+  border:1.5px solid var(--border-strong);background:var(--surface);
+  color:var(--text-muted);font-size:0.75rem;font-weight:700;
+  cursor:pointer;transition:all 0.15s;
+}
+.chip:hover{border-color:var(--yellow-dk);color:var(--text);}
+.chip.on{background:var(--yellow);border-color:var(--yellow-dk);color:var(--ink);}
+.sort-sel{
+  padding:5px 12px;border-radius:6px;
+  border:1.5px solid var(--border-strong);background:var(--surface);
+  color:var(--text-muted);font-size:0.75rem;font-weight:700;
+  cursor:pointer;outline:none;
+}
+.sort-sel:focus{border-color:var(--yellow-dk);}
+
+.reviews-feed{display:flex;flex-direction:column;gap:14px;}
+.rv-card{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:14px;padding:20px;transition:border-color 0.18s;
+}
+.rv-card:hover{border-color:var(--border-strong);}
+.rv-card-cert{border-left:4px solid var(--yellow-dk);}
+.rv-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;}
+.rv-co{display:flex;align-items:center;gap:9px;}
+.rv-co-logo{width:34px;height:34px;border-radius:7px;background:var(--yellow-lt);border:1px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:0.95rem;}
+.rv-co-name{font-weight:800;font-size:0.9rem;color:var(--text);}
+.rv-co-role{color:var(--text-muted);font-size:0.73rem;font-weight:600;margin-top:1px;}
+.rv-meta{text-align:right;flex-shrink:0;}
+.rv-date{color:var(--text-dim);font-family:'Noto Sans Mono',monospace;font-size:0.65rem;}
+.rv-cert-tag{font-family:'Noto Sans Mono',monospace;font-size:0.62rem;margin-top:2px;font-weight:500;}
+.rv-cert-tag.cert{color:var(--yellow-dk);}
+.rv-cert-tag.user{color:var(--text-dim);}
+.rv-title{font-weight:800;font-size:0.97rem;color:var(--text);margin-bottom:6px;}
+.rv-body{color:var(--text-muted);font-size:0.85rem;line-height:1.65;font-weight:500;}
+.rv-proscons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+.rv-pros{background:#F0FFF8;border:1px solid rgba(0,140,70,0.14);border-radius:8px;padding:9px 12px;font-size:0.78rem;color:var(--text-muted);}
+.rv-cons{background:var(--coral-lt);border:1px solid rgba(232,64,42,0.14);border-radius:8px;padding:9px 12px;font-size:0.78rem;color:var(--text-muted);}
+[data-theme="night"] .rv-pros{background:rgba(0,140,70,0.08);}
+.rv-pc-label{font-size:0.62rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;}
+.rv-pros .rv-pc-label{color:#1a7a4a;}
+.rv-cons .rv-pc-label{color:var(--coral);}
+.rv-sub-ratings{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.rv-sub{display:flex;flex-direction:column;gap:3px;}
+.rv-sub-lbl{font-family:'Noto Sans Mono',monospace;font-size:0.6rem;color:var(--text-dim);}
+.rv-sub-bar{width:56px;height:3px;border-radius:2px;background:var(--surface3);}
+.rv-sub-fill{height:100%;border-radius:2px;background:var(--yellow-dk);}
+.rv-actions{display:flex;align-items:center;gap:10px;margin-top:12px;}
+.rv-helpful{
+  display:flex;align-items:center;gap:5px;padding:4px 11px;
+  border-radius:6px;background:var(--surface2);border:1px solid var(--border-strong);
+  color:var(--text-muted);font-size:0.75rem;font-weight:700;cursor:pointer;
+  transition:all 0.15s;
+}
+.rv-helpful:hover,.rv-helpful.on{background:var(--yellow-lt);border-color:var(--yellow-dk);color:var(--ink);}
+.rv-report{margin-left:auto;font-size:0.68rem;color:var(--text-dim);cursor:pointer;font-family:'Noto Sans Mono',monospace;}
+.rv-report:hover{color:var(--coral);}
+
+/* CATEGORIES */
+.cats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:28px;}
+.cat-card{
+  background:var(--surface);border:1.5px solid var(--border);border-radius:12px;
+  padding:16px;cursor:pointer;transition:all 0.17s;
+  display:flex;align-items:center;gap:12px;
+}
+.cat-card:hover{background:var(--yellow-lt);border-color:var(--yellow-dk);transform:translateY(-1px);}
+.cat-icon{font-size:1.4rem;flex-shrink:0;}
+.cat-name{font-weight:800;font-size:0.87rem;color:var(--text);margin-bottom:1px;}
+.cat-count{color:var(--text-muted);font-size:0.72rem;font-weight:600;}
+
+/* CTA BELT */
+.cta-belt{
+  background:var(--yellow);padding:60px 24px;
+  position:relative;overflow:hidden;
+}
+.cta-belt::before{
+  content:'';position:absolute;right:-80px;top:-80px;
+  width:320px;height:320px;border-radius:50%;
+  background:rgba(232,64,42,0.12);
+}
+.cta-belt-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;position:relative;}
+.cta-belt h2{font-family:'Instrument Serif',serif;font-weight:400;font-size:clamp(1.6rem,3vw,2.3rem);color:var(--ink);letter-spacing:-0.5px;margin-bottom:6px;}
+.cta-belt p{color:rgba(44,42,34,0.65);font-size:0.95rem;max-width:440px;font-weight:500;}
+.cta-belt-btn{
+  padding:14px 32px;background:var(--ink);color:var(--yellow);
+  border:none;border-radius:12px;font-family:'Nunito',sans-serif;
+  font-weight:900;font-size:1rem;cursor:pointer;white-space:nowrap;
+  transition:all 0.18s;flex-shrink:0;
+}
+.cta-belt-btn:hover{background:var(--coral);color:#fff;transform:translateY(-2px);}
+
+/* FOOTER */
+footer{
+  background:var(--ink);padding:56px 24px 36px;
+  transition:background 0.4s;
+}
+[data-theme="night"] footer{background:var(--surface);}
+.footer-inner{max-width:1100px;margin:0 auto;}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px;}
+.footer-brand-logo{font-family:'Nunito',sans-serif;font-weight:900;font-size:1.2rem;color:#fff;margin-bottom:10px;display:flex;align-items:center;gap:3px;}
+.footer-brand-logo .logo-advisor{color:var(--yellow);}
+.footer-brand-logo .logo-dot{background:var(--coral);}
+.footer-tagline{color:rgba(255,255,255,0.45);font-size:0.82rem;line-height:1.65;max-width:240px;font-weight:500;}
+.footer-col-title{font-weight:800;font-size:0.82rem;color:rgba(255,255,255,0.7);margin-bottom:14px;text-transform:uppercase;letter-spacing:0.5px;}
+.footer-col a{display:block;color:rgba(255,255,255,0.38);font-size:0.8rem;margin-bottom:8px;text-decoration:none;font-weight:500;transition:color 0.15s;}
+.footer-col a:hover{color:var(--yellow);}
+.footer-bottom{
+  padding-top:24px;border-top:1px solid rgba(255,255,255,0.08);
+  display:flex;justify-content:space-between;align-items:center;
+  color:rgba(255,255,255,0.22);font-size:0.73rem;font-weight:600;flex-wrap:wrap;gap:8px;
+}
+
+/* COMPANY DETAIL */
+.back-link{display:inline-flex;align-items:center;gap:6px;color:var(--text-muted);font-size:0.82rem;font-weight:700;cursor:pointer;margin-bottom:20px;transition:color 0.15s;}
+.back-link:hover{color:var(--coral);}
+.co-detail-hero{background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:28px;margin-bottom:20px;box-shadow:var(--card-shadow);}
+.co-detail-head{display:flex;align-items:flex-start;gap:18px;margin-bottom:22px;}
+.co-big-logo{width:66px;height:66px;border-radius:13px;background:var(--yellow-lt);border:2px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:1.9rem;flex-shrink:0;}
+.co-big-name{font-family:'Instrument Serif',serif;font-weight:400;font-size:1.6rem;letter-spacing:-0.3px;color:var(--text);margin-bottom:5px;}
+.co-big-meta{color:var(--text-muted);font-size:0.82rem;display:flex;gap:12px;flex-wrap:wrap;font-weight:600;}
+.co-big-rating-num{font-family:'Nunito',sans-serif;font-weight:900;font-size:2.8rem;line-height:1;color:var(--text);}
+.co-big-stars{color:var(--yellow-dk);font-size:1rem;letter-spacing:1px;}
+.rating-breakdown{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);}
+.rb-item{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.rb-lbl{font-family:'Noto Sans Mono',monospace;font-size:0.58rem;color:var(--text-muted);text-align:center;text-transform:uppercase;letter-spacing:0.5px;}
+.rb-val{font-weight:900;font-size:1.2rem;color:var(--text);}
+.rb-bar{width:100%;height:3px;border-radius:2px;background:var(--surface3);}
+.rb-fill{height:100%;border-radius:2px;background:var(--yellow-dk);}
+
+/* MODALS */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 0.22s;}
+.overlay.open{opacity:1;pointer-events:auto;}
+.modal{
+  background:var(--surface);border:1.5px solid var(--panel-border);
+  border-radius:20px;width:100%;max-width:540px;
+  max-height:90vh;overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,0.25);
+  transform:translateY(18px);transition:transform 0.22s;
+}
+.overlay.open .modal{transform:none;}
+.modal-hd{padding:22px 24px 0;display:flex;justify-content:space-between;align-items:center;}
+.modal-title{font-family:'Instrument Serif',serif;font-weight:400;font-size:1.2rem;color:var(--text);}
+.modal-x{width:30px;height:30px;border-radius:7px;background:var(--surface2);border:1px solid var(--border-strong);color:var(--text-muted);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.modal-x:hover{background:var(--coral);color:#fff;border-color:var(--coral);}
+.modal-bd{padding:20px 24px 24px;}
+
+/* TOAST */
+#toast{position:fixed;bottom:20px;right:20px;z-index:999;background:var(--ink);border-radius:10px;padding:11px 18px;font-family:'Nunito',sans-serif;font-size:0.82rem;font-weight:700;color:#fff;box-shadow:3px 3px 0 rgba(0,0,0,0.2);opacity:0;transform:translateY(8px);transition:all 0.25s;pointer-events:none;}
+[data-theme="night"] #toast{background:var(--surface2);border:1px solid var(--border-strong);}
+#toast.on{opacity:1;transform:none;}
+#toast.ok{border-left:3px solid var(--yellow);}
+#toast.err{background:var(--coral);}
+
+/* LOADING */
+.spinner{width:18px;height:18px;border:2px solid var(--border-strong);border-top-color:var(--yellow-dk);border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-msg{display:flex;align-items:center;justify-content:center;gap:10px;padding:32px;color:var(--text-muted);font-size:0.85rem;font-weight:600;}
+
+/* EMPTY */
+.empty-box{text-align:center;padding:48px 20px;}
+.empty-icon{font-size:2.4rem;margin-bottom:12px;}
+.empty-title{font-family:'Instrument Serif',serif;font-weight:400;font-size:1.1rem;color:var(--text);margin-bottom:6px;}
+.empty-text{color:var(--text-muted);font-size:0.85rem;font-weight:500;}
+
+/* VIEWS */
+.view{display:none;}
+.view.active{display:block;}
+
+/* LEAFLET POPUP overrides */
+.leaflet-popup-content-wrapper{
+  background:var(--panel-bg)!important;
+  border:2px solid var(--yellow-dk)!important;
+  border-radius:12px!important;
+  box-shadow:3px 3px 0 var(--yellow-dk)!important;
+  color:var(--text)!important;
+  font-family:'Nunito',sans-serif!important;
+  backdrop-filter:blur(12px)!important;
+}
+.leaflet-popup-tip{background:var(--panel-bg)!important;}
+.leaflet-popup-content{font-size:0.85rem;color:var(--text);}
+.pop-name{font-weight:800;font-size:0.93rem;color:var(--text);margin-bottom:3px;}
+.pop-stars{color:var(--yellow-dk);font-size:0.8rem;margin-bottom:2px;}
+.pop-meta{color:var(--text-muted);font-size:0.72rem;margin-bottom:8px;font-weight:600;}
+.pop-btn{display:block;width:100%;padding:7px;background:var(--yellow);border:none;color:var(--ink);border-radius:7px;font-family:'Nunito',sans-serif;font-weight:800;font-size:0.76rem;cursor:pointer;text-align:center;transition:all 0.15s;}
+.pop-btn:hover{background:var(--coral);color:#fff;}
+
+/* MAP PIN */
+.map-pin{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;border:2.5px solid rgba(255,255,255,0.8);
+  box-shadow:0 3px 10px rgba(0,0,0,0.35);
+}
+
+/* CLAIM */
+.claim-strip{
+  display:flex;align-items:center;gap:9px;padding:12px 16px;
+  background:var(--yellow-lt);border:1.5px solid var(--yellow-dk);
+  border-radius:10px;font-size:0.8rem;color:var(--ink);font-weight:600;
+  margin-top:18px;
+}
+.claim-link{color:var(--coral);cursor:pointer;text-decoration:underline;font-weight:700;}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .hero-layout{grid-template-columns:1fr;}
+  .quick-review-panel{width:100%;}
+  .footer-grid{grid-template-columns:1fr 1fr;}
+  .cta-belt-inner{flex-direction:column;}
+  .cta-belt-btn{width:100%;}
+}
+@media(max-width:480px){
+  .footer-grid{grid-template-columns:1fr;}
+  .hero-stats{gap:10px;}
+  .form-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── FULL-SCREEN MAP (behind everything) ── -->
+<div id="hero-map-wrap">
+  <div id="hero-map"></div>
+</div>
+
+<!-- ── NAV ── -->
+<nav>
+  <a class="logo" href="#" onclick="showView('home');return false;">
+    <span class="logo-legit">Legit</span><span class="logo-dot"></span><span class="logo-advisor">Advisor</span>
+  </a>
+  <div class="nav-right">
+    <div class="toggle-wrap">
+      <span class="theme-toggle-label" id="theme-label">day</span>
+      <div class="theme-toggle" onclick="toggleTheme()" title="Toggle day/night">
+        <div class="theme-toggle-knob" id="theme-knob">☀️</div>
+      </div>
+    </div>
+    <button class="nav-btn" onclick="showView('home')">Browse</button>
+    <button class="nav-btn" onclick="openOverlay('write-overlay')">Write Review</button>
+    <div id="nav-auth">
+      <button class="nav-btn" onclick="openOverlay('login-overlay')">Sign In</button>
+      <button class="nav-btn nav-btn-accent" onclick="openOverlay('register-overlay')">Join Free</button>
+    </div>
+    <div id="nav-user">
+      <div class="user-chip" onclick="showUserMenu()">
+        <div class="user-av" id="user-av-el">?</div>
+        <span class="user-name" id="user-name-el">—</span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════ HOME VIEW ═══════════════════════════ -->
+<div id="view-home" class="view active">
+
+  <!-- HERO OVERLAY — floats above map -->
+  <div id="hero-overlay">
+    <div class="wrap">
+      <div class="hero-layout">
+
+        <!-- LEFT: tagline + stats -->
+        <div class="hero-left">
+          <div class="hero-pill"><span class="hero-pill-dot"></span>Employee-first · Always free</div>
+          <h1 class="hero-h1">The employer reviews<br/>they <em>don't</em> want<br/>you to read.</h1>
+          <p class="hero-sub">Real reviews from real Greek workers.<br/>Certified insights verified by our team.</p>
+          <div class="hero-stats">
+            <div class="hero-stat"><span class="hero-stat-num" id="stat-reviews">—</span><span class="hero-stat-label">Reviews</span></div>
+            <div class="hero-stat"><span class="hero-stat-num" id="stat-companies">—</span><span class="hero-stat-label">Companies</span></div>
+            <div class="hero-stat"><span class="hero-stat-num" id="stat-certified">—</span><span class="hero-stat-label">Certified</span></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: quick review form -->
+        <div class="quick-review-panel">
+          <div class="qrp-progress">
+            <div class="qrp-dot active" id="qd0"></div>
+            <div class="qrp-dot" id="qd1"></div>
+            <div class="qrp-dot" id="qd2"></div>
+          </div>
+
+          <!-- Step 1: company + role -->
+          <div class="qrp-step active" id="qstep-0">
+            <div class="qrp-title">Have you worked somewhere?</div>
+            <div class="qrp-sub">Share your experience — anonymously if you like.</div>
+            <div class="anon-strip">🔒 Your employer can never trace this back to you.</div>
+            <div class="form-group">
+              <label class="form-label">Company Name *</label>
+              <input class="form-input" id="q-company" placeholder="e.g. Skroutz, Cosmote, Alpha Bank…" list="co-datalist" autocomplete="off"/>
+              <datalist id="co-datalist"></datalist>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Your Role *</label>
+                <input class="form-input" id="q-role" placeholder="e.g. Developer"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Still there?</label>
+                <select class="form-input" id="q-status">
+                  <option value="current">Yes, current</option>
+                  <option value="former">No, former</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-yellow btn-full" onclick="qNext(1)">Next →</button>
+          </div>
+
+          <!-- Step 2: ratings -->
+          <div class="qrp-step" id="qstep-1">
+            <div class="qrp-title">How was it, really?</div>
+            <div class="qrp-sub">Rate your experience across the areas that matter.</div>
+            <div class="form-group">
+              <label class="form-label">Overall Rating *</label>
+              <div class="star-row" id="q-overall-stars">
+                <input type="radio" name="qoverall" id="qo5" value="5"/><label for="qo5">★</label>
+                <input type="radio" name="qoverall" id="qo4" value="4"/><label for="qo4">★</label>
+                <input type="radio" name="qoverall" id="qo3" value="3"/><label for="qo3">★</label>
+                <input type="radio" name="qoverall" id="qo2" value="2"/><label for="qo2">★</label>
+                <input type="radio" name="qoverall" id="qo1" value="1"/><label for="qo1">★</label>
+              </div>
+            </div>
+            <div class="sub-stars">
+              <div class="sub-star-item">
+                <div class="sub-star-label">Work-Life</div>
+                <div class="sub-star-row">
+                  <input type="radio" name="qwlb" id="qw5" value="5"/><label for="qw5">★</label>
+                  <input type="radio" name="qwlb" id="qw4" value="4"/><label for="qw4">★</label>
+                  <input type="radio" name="qwlb" id="qw3" value="3"/><label for="qw3">★</label>
+                  <input type="radio" name="qwlb" id="qw2" value="2"/><label for="qw2">★</label>
+                  <input type="radio" name="qwlb" id="qw1" value="1"/><label for="qw1">★</label>
+                </div>
+              </div>
+              <div class="sub-star-item">
+                <div class="sub-star-label">Salary</div>
+                <div class="sub-star-row">
+                  <input type="radio" name="qsal" id="qs5" value="5"/><label for="qs5">★</label>
+                  <input type="radio" name="qsal" id="qs4" value="4"/><label for="qs4">★</label>
+                  <input type="radio" name="qsal" id="qs3" value="3"/><label for="qs3">★</label>
+                  <input type="radio" name="qsal" id="qs2" value="2"/><label for="qs2">★</label>
+                  <input type="radio" name="qsal" id="qs1" value="1"/><label for="qs1">★</label>
+                </div>
+              </div>
+              <div class="sub-star-item">
+                <div class="sub-star-label">Management</div>
+                <div class="sub-star-row">
+                  <input type="radio" name="qmgmt" id="qm5" value="5"/><label for="qm5">★</label>
+                  <input type="radio" name="qmgmt" id="qm4" value="4"/><label for="qm4">★</label>
+                  <input type="radio" name="qmgmt" id="qm3" value="3"/><label for="qm3">★</label>
+                  <input type="radio" name="qmgmt" id="qm2" value="2"/><label for="qm2">★</label>
+                  <input type="radio" name="qmgmt" id="qm1" value="1"/><label for="qm1">★</label>
+                </div>
+              </div>
+              <div class="sub-star-item">
+                <div class="sub-star-label">Growth</div>
+                <div class="sub-star-row">
+                  <input type="radio" name="qgrowth" id="qg5" value="5"/><label for="qg5">★</label>
+                  <input type="radio" name="qgrowth" id="qg4" value="4"/><label for="qg4">★</label>
+                  <input type="radio" name="qgrowth" id="qg3" value="3"/><label for="qg3">★</label>
+                  <input type="radio" name="qgrowth" id="qg2" value="2"/><label for="qg2">★</label>
+                  <input type="radio" name="qgrowth" id="qg1" value="1"/><label for="qg1">★</label>
+                </div>
+              </div>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-ghost" onclick="qNext(0)">← Back</button>
+              <button class="btn btn-yellow" onclick="qNext(2)">Next →</button>
+            </div>
+          </div>
+
+          <!-- Step 3: text + submit -->
+          <div class="qrp-step" id="qstep-2">
+            <div class="qrp-title">Tell the full story.</div>
+            <div class="qrp-sub">The detail that helps someone decide.</div>
+            <div class="form-group">
+              <label class="form-label">Review Headline *</label>
+              <input class="form-input form-input-sm" id="q-title" placeholder="e.g. Great team, chaotic management" maxlength="100"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Your Experience *</label>
+              <textarea class="form-input form-input-sm" id="q-body" placeholder="What's it really like? Min 50 chars." rows="3"></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Pros</label>
+                <textarea class="form-input form-input-sm" id="q-pros" rows="2" placeholder="What's good?"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Cons</label>
+                <textarea class="form-input form-input-sm" id="q-cons" rows="2" placeholder="What's bad?"></textarea>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Name / Nickname (optional)</label>
+              <input class="form-input form-input-sm" id="q-author" placeholder="Leave blank to post as Anonymous"/>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-ghost" onclick="qNext(1)">← Back</button>
+              <button class="btn btn-coral" id="q-submit-btn" onclick="submitReview()">Submit →</button>
+            </div>
+          </div>
+
+        </div><!-- /quick-review-panel -->
+      </div><!-- /hero-layout -->
+    </div><!-- /wrap -->
+  </div><!-- /hero-overlay -->
+
+  <!-- PAGE CONTENT starts here -->
+  <div id="page-content">
+
+    <!-- SEARCH BELT -->
+    <div class="search-belt">
+      <div class="search-belt-inner">
+        <span class="search-belt-label">Find an employer →</span>
+        <div class="search-field-wrap">
+          <input class="search-field" id="search-input" placeholder="Company name, industry, city…" autocomplete="off" oninput="handleSearch(this.value)" onkeydown="if(event.key==='Enter')doSearch()"/>
+          <div class="search-sug" id="search-sug"></div>
+        </div>
+        <input class="search-field" id="loc-input" placeholder="📍 City" style="width:130px;" onkeydown="if(event.key==='Enter')doSearch()"/>
+        <button class="search-go" onclick="doSearch()">Search</button>
+      </div>
+    </div>
+
+    <!-- FEATURED COMPANIES -->
+    <section class="section">
+      <div class="section-inner">
+        <div class="sec-label">Top Rated</div>
+        <div class="sec-title">Featured Employers</div>
+        <p class="sec-sub">Companies with the most reviews and highest employee satisfaction this month.</p>
+        <div class="cos-grid" id="companies-grid">
+          <div class="loading-msg"><div class="spinner"></div> Loading…</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REVIEWS -->
+    <section class="section reviews-section">
+      <div class="section-inner">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;margin-bottom:0;">
+          <div>
+            <div class="sec-label">Fresh Intel</div>
+            <div class="sec-title">Latest Reviews</div>
+          </div>
+          <div class="reviews-controls" style="margin-bottom:0;">
+            <div class="filter-chips">
+              <div class="chip on" onclick="filterRv('all',this)">All</div>
+              <div class="chip" onclick="filterRv('certified',this)">✓ Certified</div>
+              <div class="chip" onclick="filterRv('user',this)">👤 User</div>
+            </div>
+            <select class="sort-sel" onchange="sortRv(this.value)">
+              <option value="recent">Most Recent</option>
+              <option value="helpful">Most Helpful</option>
+              <option value="high">Highest Rated</option>
+              <option value="low">Lowest Rated</option>
+            </select>
+          </div>
+        </div>
+        <div class="reviews-feed" id="reviews-feed" style="margin-top:24px;">
+          <div class="loading-msg"><div class="spinner"></div> Loading…</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INDUSTRY BROWSE -->
+    <section class="section">
+      <div class="section-inner">
+        <div class="sec-label">Explore</div>
+        <div class="sec-title">Browse by Industry</div>
+        <div class="cats-grid" id="cats-grid"></div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <div class="cta-belt">
+      <div class="cta-belt-inner">
+        <div>
+          <h2>Worked somewhere? <em style="font-style:italic;">Tell the world.</em></h2>
+          <p>Your review could save someone from a nightmare job — or point them to a great one. Takes 3 minutes. Always anonymous.</p>
+        </div>
+        <button class="cta-belt-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">Write a Review ↑</button>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="footer-inner">
+        <div class="footer-grid">
+          <div>
+            <div class="footer-brand-logo">Legit<span class="logo-dot" style="background:var(--coral);margin:0 2px;"></span><span class="logo-advisor">Advisor</span></div>
+            <p class="footer-tagline">Honest employer reviews from real workers in Greece. No spin, no PR — just the truth.</p>
+          </div>
+          <div class="footer-col">
+            <div class="footer-col-title">Discover</div>
+            <a href="#">Top Rated</a>
+            <a href="#">New Reviews</a>
+            <a href="#">By Industry</a>
+            <a href="#">Salary Insights</a>
+          </div>
+          <div class="footer-col">
+            <div class="footer-col-title">Community</div>
+            <a href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">Write a Review</a>
+            <a href="#">Certification</a>
+            <a href="#">Verified Badge</a>
+            <a href="#">Employer Response</a>
+          </div>
+          <div class="footer-col">
+            <div class="footer-col-title">Company</div>
+            <a href="#">About Us</a>
+            <a href="#">How We Certify</a>
+            <a href="#">Privacy Policy</a>
+            <a href="admin12345678.html">Admin</a>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span>© 2025 Legit Advisor. All rights reserved.</span>
+          <span>Built for workers, not bosses.</span>
+        </div>
+      </div>
+    </footer>
+
+  </div><!-- /page-content -->
+</div><!-- /view-home -->
+
+<!-- COMPANY DETAIL VIEW -->
+<div id="view-company" class="view" style="padding-top:56px;background:var(--bg);min-height:100vh;">
+  <section class="section">
+    <div class="section-inner">
+      <div class="back-link" onclick="showView('home')">← Back to listings</div>
+      <div id="co-detail-content"><div class="loading-msg"><div class="spinner"></div></div></div>
+    </div>
+  </section>
+</div>
+
+<!-- SEARCH RESULTS VIEW -->
+<div id="view-search" class="view" style="padding-top:56px;background:var(--bg);min-height:100vh;">
+  <section class="section">
+    <div class="section-inner">
+      <div class="back-link" onclick="showView('home')">← Back</div>
+      <div class="sec-title" id="search-results-title" style="margin-bottom:24px;">Results</div>
+      <div class="cos-grid" id="search-results-grid"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════════════════════════ MODALS ═══════════════════════════ -->
+
+<!-- FULL WRITE REVIEW -->
+<div class="overlay" id="write-overlay">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title">Write a Full Review</div>
+      <button class="modal-x" onclick="closeOverlay('write-overlay')">×</button>
+    </div>
+    <div class="modal-bd">
+      <div class="anon-strip">🔒 Your identity is protected. Employers cannot trace this to you.</div>
+      <div class="form-group"><label class="form-label">Company *</label><input class="form-input" id="wr-company" placeholder="e.g. Skroutz, OTE, Eurobank" list="co-datalist"/></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Role *</label><input class="form-input" id="wr-role" placeholder="Your job title"/></div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select class="form-input" id="wr-status"><option value="current">Current</option><option value="former">Former</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Employment</label>
+          <select class="form-input" id="wr-emptype"><option value="full_time">Full Time</option><option value="part_time">Part Time</option><option value="contract">Contract</option><option value="internship">Internship</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">City</label><input class="form-input" id="wr-location" placeholder="Athens, Thessaloniki…"/></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Overall Rating *</label>
+        <div class="star-row">
+          <input type="radio" name="wroverall" id="wro5" value="5"/><label for="wro5">★</label>
+          <input type="radio" name="wroverall" id="wro4" value="4"/><label for="wro4">★</label>
+          <input type="radio" name="wroverall" id="wro3" value="3"/><label for="wro3">★</label>
+          <input type="radio" name="wroverall" id="wro2" value="2"/><label for="wro2">★</label>
+          <input type="radio" name="wroverall" id="wro1" value="1"/><label for="wro1">★</label>
+        </div>
+      </div>
+      <div class="sub-stars" style="margin-bottom:16px;">
+        <div class="sub-star-item"><div class="sub-star-label">Work-Life</div><div class="sub-star-row"><input type="radio" name="wrwlb" id="wrw5" value="5"/><label for="wrw5">★</label><input type="radio" name="wrwlb" id="wrw4" value="4"/><label for="wrw4">★</label><input type="radio" name="wrwlb" id="wrw3" value="3"/><label for="wrw3">★</label><input type="radio" name="wrwlb" id="wrw2" value="2"/><label for="wrw2">★</label><input type="radio" name="wrwlb" id="wrw1" value="1"/><label for="wrw1">★</label></div></div>
+        <div class="sub-star-item"><div class="sub-star-label">Salary</div><div class="sub-star-row"><input type="radio" name="wrsal" id="wrs5" value="5"/><label for="wrs5">★</label><input type="radio" name="wrsal" id="wrs4" value="4"/><label for="wrs4">★</label><input type="radio" name="wrsal" id="wrs3" value="3"/><label for="wrs3">★</label><input type="radio" name="wrsal" id="wrs2" value="2"/><label for="wrs2">★</label><input type="radio" name="wrsal" id="wrs1" value="1"/><label for="wrs1">★</label></div></div>
+        <div class="sub-star-item"><div class="sub-star-label">Management</div><div class="sub-star-row"><input type="radio" name="wrmgmt" id="wrm5" value="5"/><label for="wrm5">★</label><input type="radio" name="wrmgmt" id="wrm4" value="4"/><label for="wrm4">★</label><input type="radio" name="wrmgmt" id="wrm3" value="3"/><label for="wrm3">★</label><input type="radio" name="wrmgmt" id="wrm2" value="2"/><label for="wrm2">★</label><input type="radio" name="wrmgmt" id="wrm1" value="1"/><label for="wrm1">★</label></div></div>
+        <div class="sub-star-item"><div class="sub-star-label">Growth</div><div class="sub-star-row"><input type="radio" name="wrgrowth" id="wrg5" value="5"/><label for="wrg5">★</label><input type="radio" name="wrgrowth" id="wrg4" value="4"/><label for="wrg4">★</label><input type="radio" name="wrgrowth" id="wrg3" value="3"/><label for="wrg3">★</label><input type="radio" name="wrgrowth" id="wrg2" value="2"/><label for="wrg2">★</label><input type="radio" name="wrgrowth" id="wrg1" value="1"/><label for="wrg1">★</label></div></div>
+      </div>
+      <div class="form-group"><label class="form-label">Headline *</label><input class="form-input" id="wr-title" placeholder="One-liner about your experience" maxlength="100"/></div>
+      <div class="form-group"><label class="form-label">Full Review *</label><textarea class="form-input" id="wr-body" rows="4" placeholder="What's it really like working there? Min 50 chars."></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Pros</label><textarea class="form-input" id="wr-pros" rows="2" placeholder="What's good?"></textarea></div>
+        <div class="form-group"><label class="form-label">Cons</label><textarea class="form-input" id="wr-cons" rows="2" placeholder="What needs work?"></textarea></div>
+      </div>
+      <div class="form-group"><label class="form-label">Display Name (optional)</label><input class="form-input" id="wr-author" placeholder="Leave blank for Anonymous"/></div>
+      <button class="btn btn-coral btn-full" id="wr-submit-btn" onclick="submitFullReview()">Submit Review →</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="overlay" id="login-overlay">
+  <div class="modal">
+    <div class="modal-hd"><div class="modal-title">Sign In</div><button class="modal-x" onclick="closeOverlay('login-overlay')">×</button></div>
+    <div class="modal-bd">
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="li-email" type="email" placeholder="you@email.com"/></div>
+      <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="li-pass" type="password" placeholder="••••••••"/></div>
+      <button class="btn btn-yellow btn-full" onclick="doLogin()">Sign In</button>
+      <div style="text-align:center;margin:14px 0;color:var(--text-dim);font-size:0.78rem;font-weight:600;">or</div>
+      <button class="btn btn-ghost btn-full" onclick="doAnonLogin()">Continue Anonymously</button>
+      <p style="text-align:center;margin-top:14px;font-size:0.78rem;color:var(--text-muted);font-weight:600;">No account? <span style="color:var(--coral);cursor:pointer;font-weight:800;" onclick="closeOverlay('login-overlay');openOverlay('register-overlay')">Join free →</span></p>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div class="overlay" id="register-overlay">
+  <div class="modal">
+    <div class="modal-hd"><div class="modal-title">Create Account</div><button class="modal-x" onclick="closeOverlay('register-overlay')">×</button></div>
+    <div class="modal-bd">
+      <div class="anon-strip">🔒 Your employer can never see or connect your account to any review.</div>
+      <div class="form-group"><label class="form-label">Display Name</label><input class="form-input" id="reg-name" placeholder="How you'll appear publicly"/></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="reg-email" type="email" placeholder="you@email.com"/></div>
+      <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="reg-pass" type="password" placeholder="8+ characters"/></div>
+      <button class="btn btn-yellow btn-full" onclick="doRegister()">Create Account →</button>
+      <p style="text-align:center;margin-top:14px;font-size:0.78rem;color:var(--text-muted);font-weight:600;">Have an account? <span style="color:var(--coral);cursor:pointer;font-weight:800;" onclick="closeOverlay('register-overlay');openOverlay('login-overlay')">Sign in →</span></p>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ═══════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════
+const SB_URL = 'https://wnaihqjjuexmglephord.supabase.co';
+const SB_KEY = 'sb_publishable_P9ELlSoBpJy-b4eY4l6E5w_YrwjDVJX';
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+var sb, MAP, currentUser, toastTmr;
+var allCompanies = [], allReviews = [];
+var rvFilter = 'all', rvSort = 'recent';
+var qStep = 0;
+
+// ═══════════════════════════════════════════════════
+// THEME — Greek time auto + toggle
+// ═══════════════════════════════════════════════════
+function getGreekHour() {
+  // Greece is UTC+2 (EET) or UTC+3 (EEST summer)
+  var now = new Date();
+  var gr = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Athens' }));
+  return gr.getHours();
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  var knob = document.getElementById('theme-knob');
+  var lbl  = document.getElementById('theme-label');
+  if (theme === 'night') {
+    knob.textContent = '🌙'; lbl.textContent = 'night';
+  } else {
+    knob.textContent = '☀️'; lbl.textContent = 'day';
+  }
+  if (MAP) {
+    setTimeout(function() {
+      MAP.getContainer().style.filter = getComputedStyle(document.documentElement).getPropertyValue('--map-filter').trim();
+    }, 50);
+  }
+  localStorage.setItem('la_theme', theme);
+}
+
+function toggleTheme() {
+  var cur = document.documentElement.getAttribute('data-theme');
+  applyTheme(cur === 'night' ? 'day' : 'night');
+}
+
+function initTheme() {
+  // Check if user has manually set a theme
+  var saved = localStorage.getItem('la_theme');
+  if (saved) { applyTheme(saved); return; }
+  // Otherwise auto by Greek time: night = 21:00–07:00
+  var h = getGreekHour();
+  applyTheme((h >= 21 || h < 7) ? 'night' : 'day');
+}
+
+// ═══════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════
+window.addEventListener('load', async function() {
+  initTheme();
+
+  try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e){}
+
+  if (sb) {
+    var { data: { session } } = await sb.auth.getSession();
+    if (session) setUserUI(session.user);
+    sb.auth.onAuthStateChange(function(_,s){ if(s) setUserUI(s.user); else clearUserUI(); });
+  }
+
+  initMap();
+  await Promise.all([loadCompanies(), loadReviews()]);
+  loadStats();
+  buildCats();
+});
+
+// ═══════════════════════════════════════════════════
+// MAP — focused on Greece
+// ═══════════════════════════════════════════════════
+function initMap() {
+  MAP = L.map('hero-map', {
+    zoomControl: false,
+    center: [38.5, 24.0], // center of Greece
+    zoom: 6,
+    scrollWheelZoom: true,
+    attributionControl: false
+  });
+  L.control.zoom({ position: 'bottomright' }).addTo(MAP);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '© OpenStreetMap'
+  }).addTo(MAP);
+  // Apply theme filter after tiles load
+  MAP.on('load', applyMapFilter);
+  applyMapFilter();
+}
+
+function applyMapFilter() {
+  if (!MAP) return;
+  var f = getComputedStyle(document.documentElement).getPropertyValue('--map-filter').trim();
+  MAP.getContainer().style.filter = f || 'none';
+}
+
+function addCompanyPins(companies) {
+  if (!MAP) return;
+  companies.forEach(function(c) {
+    if (!c.lat || !c.lng) return;
+    var r = parseFloat(c.avg_rating) || 0;
+    var color = r >= 4 ? '#1a7a4a' : r >= 3 ? '#C9AA00' : '#E8402A';
+    if (c.is_certified_partner) color = '#C9AA00';
+    var icon = L.divIcon({
+      className:'',
+      html:'<div class="map-pin" style="background:'+color+';">'+( c.emoji||'🏢')+'</div>',
+      iconSize:[36,36], iconAnchor:[18,18], popupAnchor:[0,-20]
+    });
+    var stars = '★'.repeat(Math.round(r))+'☆'.repeat(5-Math.round(r));
+    L.marker([c.lat,c.lng],{icon}).bindPopup(
+      '<div class="pop-name">'+(c.name||'')+'</div>'+
+      '<div class="pop-stars">'+stars+'</div>'+
+      '<div class="pop-meta">'+(c.review_count||0)+' reviews · '+(c.industry||'')+'</div>'+
+      '<button class="pop-btn" onclick="viewCompany(\''+c.id+'\')">See Reviews →</button>'
+    ).addTo(MAP);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════
+async function doLogin() {
+  var email = document.getElementById('li-email').value.trim();
+  var pass  = document.getElementById('li-pass').value;
+  if (!email||!pass) return toast('Fill in email and password','err');
+  var {data,error} = await sb.auth.signInWithPassword({email,password:pass});
+  if (error) return toast('Login failed: '+error.message,'err');
+  setUserUI(data.user); closeOverlay('login-overlay'); toast('Welcome back! 👋','ok');
+}
+async function doRegister() {
+  var name  = document.getElementById('reg-name').value.trim();
+  var email = document.getElementById('reg-email').value.trim();
+  var pass  = document.getElementById('reg-pass').value;
+  if (!name||!email||!pass) return toast('All fields required','err');
+  if (pass.length < 8) return toast('Password needs 8+ chars','err');
+  var {data,error} = await sb.auth.signUp({email,password:pass,options:{data:{display_name:name}}});
+  if (error) return toast('Error: '+error.message,'err');
+  setUserUI(data.user); closeOverlay('register-overlay'); toast('Account created ✓','ok');
+}
+async function doAnonLogin() {
+  if (sb) { var {data} = await sb.auth.signInAnonymously(); if (data.user) setUserUI(data.user, true); }
+  closeOverlay('login-overlay'); toast('Continuing anonymously 🕵️','ok');
+}
+function setUserUI(user, isAnon) {
+  currentUser = user;
+  document.getElementById('nav-auth').style.display = 'none';
+  document.getElementById('nav-user').style.display = 'flex';
+  var n = (user.user_metadata&&user.user_metadata.display_name) || (isAnon?'Anon':user.email.split('@')[0]);
+  document.getElementById('user-name-el').textContent = n;
+  document.getElementById('user-av-el').textContent = n[0].toUpperCase();
+}
+function clearUserUI() {
+  currentUser = null;
+  document.getElementById('nav-auth').style.display = 'flex';
+  document.getElementById('nav-user').style.display = 'none';
+}
+function showUserMenu() { if(confirm('Sign out?')){ if(sb)sb.auth.signOut(); clearUserUI(); toast('Signed out'); } }
+
+// ═══════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════
+async function loadCompanies() {
+  var companies;
+  if (sb) {
+    var {data} = await sb.from('companies').select('*').eq('is_active',true).order('avg_rating',{ascending:false}).limit(12);
+    companies = (data&&data.length) ? data : getDemoCompanies();
+  } else companies = getDemoCompanies();
+  allCompanies = companies;
+  renderCompanies(companies);
+  addCompanyPins(companies);
+  // populate datalists
+  var opts = companies.map(c=>'<option value="'+escH(c.name)+'">').join('');
+  document.querySelectorAll('#co-datalist').forEach(dl=>dl.innerHTML=opts);
+}
+
+async function loadReviews() {
+  var reviews;
+  if (sb) {
+    var q = sb.from('reviews').select('*,companies(name,emoji,industry)').eq('status','approved');
+    if (rvFilter==='certified') q=q.eq('is_certified',true);
+    if (rvFilter==='user') q=q.eq('is_certified',false);
+    if (rvSort==='helpful') q=q.order('helpful_count',{ascending:false});
+    else if (rvSort==='high') q=q.order('rating_overall',{ascending:false});
+    else if (rvSort==='low') q=q.order('rating_overall',{ascending:true});
+    else q=q.order('created_at',{ascending:false});
+    var {data} = await q.limit(10);
+    reviews = (data&&data.length) ? data : getDemoReviews();
+  } else reviews = getDemoReviews();
+  allReviews = reviews;
+  renderReviews(reviews);
+}
+
+async function loadStats() {
+  if (!sb) { setStat('stat-reviews','2.4k'); setStat('stat-companies','380'); setStat('stat-certified','142'); return; }
+  var [rv,co,cert] = await Promise.all([
+    sb.from('reviews').select('id',{count:'exact',head:true}).eq('status','approved'),
+    sb.from('companies').select('id',{count:'exact',head:true}).eq('is_active',true),
+    sb.from('reviews').select('id',{count:'exact',head:true}).eq('is_certified',true).eq('status','approved')
+  ]);
+  setStat('stat-reviews',fmt(rv.count||0));
+  setStat('stat-companies',fmt(co.count||0));
+  setStat('stat-certified',fmt(cert.count||0));
+}
+function setStat(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; }
+function fmt(n){ return n>=1000?(n/1000).toFixed(1)+'k':String(n); }
+
+// ═══════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════
+function renderCompanies(list) {
+  var g = document.getElementById('companies-grid');
+  if (!list.length) { g.innerHTML='<div class="empty-box"><div class="empty-icon">🏭</div><div class="empty-title">No companies yet</div></div>'; return; }
+  g.innerHTML = list.map(coCardHTML).join('');
+}
+
+function coCardHTML(c) {
+  var r = parseFloat(c.avg_rating)||0;
+  var stars = '★'.repeat(Math.round(r))+'☆'.repeat(5-Math.round(r));
+  var badges = '';
+  if (c.is_certified_partner) badges += '<span class="badge badge-cert">✓ CERTIFIED</span>';
+  if (c.is_trending) badges += '<span class="badge badge-trend">↑ TRENDING</span>';
+  if (r && r < 2.5) badges += '<span class="badge badge-warn">⚠ LOW</span>';
+  if (c.city) badges += '<span class="badge badge-loc">📍 '+escH(c.city)+'</span>';
+  return '<div class="co-card" onclick="viewCompany(\''+c.id+'\')">'+
+    '<div class="co-card-head"><div class="co-logo">'+(c.emoji||'🏢')+'</div>'+
+    '<div><div class="co-name">'+escH(c.name)+'</div><div class="co-ind">'+escH(c.industry||'')+'</div></div></div>'+
+    (badges?'<div class="co-badges">'+badges+'</div>':'')+
+    '<div class="co-rating"><span class="co-stars">'+stars+'</span><span class="co-score">'+r.toFixed(1)+'</span><span class="co-count">('+( c.review_count||0)+')</span></div>'+
+    (c.tagline?'<div class="co-snip">'+escH(c.tagline)+'</div>':'')+
+    '</div>';
+}
+
+function renderReviews(list) {
+  var f = document.getElementById('reviews-feed');
+  if (!list.length) { f.innerHTML='<div class="empty-box"><div class="empty-icon">📝</div><div class="empty-title">No reviews yet</div><div class="empty-text">Be the first.</div></div>'; return; }
+  f.innerHTML = list.map(rvCardHTML).join('');
+}
+
+function rvCardHTML(r) {
+  var co = r.companies||{};
+  var ov = r.rating_overall||0;
+  var stars = '★'.repeat(Math.round(ov))+'☆'.repeat(5-Math.round(ov));
+  var cert = r.is_certified;
+  var date = r.created_at ? new Date(r.created_at).toLocaleDateString('el-GR',{year:'numeric',month:'short',day:'numeric'}) : '';
+  var subs = [{l:'WLB',v:r.rating_wlb},{l:'SAL',v:r.rating_salary},{l:'MGT',v:r.rating_mgmt},{l:'GRW',v:r.rating_growth}];
+  var subHTML = subs.filter(s=>s.v).map(s=>'<div class="rv-sub"><div class="rv-sub-lbl">'+s.l+'</div><div class="rv-sub-bar"><div class="rv-sub-fill" style="width:'+(s.v/5*100)+'%"></div></div></div>').join('');
+  return '<div class="rv-card'+(cert?' rv-card-cert':'')+'">'+
+    '<div class="rv-head">'+
+      '<div class="rv-co"><div class="rv-co-logo">'+(co.emoji||'🏢')+'</div>'+
+      '<div><div class="rv-co-name">'+(co.name||r.company_name||'—')+'</div>'+
+      '<div class="rv-co-role">'+(r.role||'Employee')+' · '+(r.employment_status==='current'?'Current':'Former')+'</div></div></div>'+
+      '<div class="rv-meta"><div class="rv-date">'+date+'</div>'+
+      '<div class="rv-cert-tag '+(cert?'cert':'user')+'">'+(cert?'✓ CERTIFIED':'👤 USER')+'</div></div>'+
+    '</div>'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="color:var(--yellow-dk);font-size:0.88rem;">'+stars+'</span><span style="font-weight:900;font-size:1rem;">'+ov.toFixed(1)+'</span></div>'+
+    '<div class="rv-title">'+escH(r.title||'Review')+'</div>'+
+    '<div class="rv-body">'+escH(r.body||'')+'</div>'+
+    ((r.pros||r.cons)?'<div class="rv-proscons">'+
+      (r.pros?'<div class="rv-pros"><div class="rv-pc-label">Pros</div>'+escH(r.pros)+'</div>':'')+
+      (r.cons?'<div class="rv-cons"><div class="rv-pc-label">Cons</div>'+escH(r.cons)+'</div>':'')+
+    '</div>':'')+
+    (subHTML?'<div class="rv-sub-ratings">'+subHTML+'</div>':'')+
+    '<div class="rv-actions">'+
+      '<button class="rv-helpful" onclick="markHelpful(\''+r.id+'\',this)">👍 <span>'+(r.helpful_count||0)+'</span></button>'+
+      '<span class="rv-report" onclick="reportRv(\''+r.id+'\')">⚑ Report</span>'+
+    '</div>'+
+    '</div>';
+}
+
+function buildCats() {
+  var cats=[{icon:'💻',name:'Technology',count:'1.2k+'},{icon:'🏥',name:'Healthcare',count:'890+'},{icon:'🏦',name:'Finance',count:'740+'},{icon:'🛒',name:'Retail',count:'1.1k+'},{icon:'🏗️',name:'Construction',count:'420+'},{icon:'📚',name:'Education',count:'580+'},{icon:'🍽️',name:'Hospitality',count:'670+'},{icon:'🚚',name:'Logistics',count:'390+'}];
+  document.getElementById('cats-grid').innerHTML = cats.map(c=>
+    '<div class="cat-card" onclick="searchByInd(\''+c.name+'\')"><span class="cat-icon">'+c.icon+'</span><div><div class="cat-name">'+c.name+'</div><div class="cat-count">'+c.count+'</div></div></div>'
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// COMPANY DETAIL
+// ═══════════════════════════════════════════════════
+async function viewCompany(id) {
+  showView('company');
+  var el = document.getElementById('co-detail-content');
+  el.innerHTML = '<div class="loading-msg"><div class="spinner"></div></div>';
+  var company, reviews;
+  if (!sb) {
+    company = getDemoCompanies().find(c=>c.id==id)||getDemoCompanies()[0];
+    reviews = getDemoReviews().slice(0,4);
+  } else {
+    var [cr,rr] = await Promise.all([
+      sb.from('companies').select('*').eq('id',id).single(),
+      sb.from('reviews').select('*').eq('company_id',id).eq('status','approved').order('created_at',{ascending:false}).limit(20)
+    ]);
+    company=cr.data; reviews=rr.data||[];
+  }
+  if (!company) { el.innerHTML='<div class="empty-box"><div class="empty-icon">🔍</div><div class="empty-title">Not found</div></div>'; return; }
+  var r = parseFloat(company.avg_rating)||0;
+  var stars = '★'.repeat(Math.round(r))+'☆'.repeat(5-Math.round(r));
+  var rbs = [{l:'OVERALL',v:r},{l:'WLB',v:company.avg_wlb},{l:'SALARY',v:company.avg_salary},{l:'MGMT',v:company.avg_mgmt},{l:'GROWTH',v:company.avg_growth}];
+  var rbHTML = rbs.map(function(rb){
+    var v=parseFloat(rb.v)||0;
+    return '<div class="rb-item"><div class="rb-lbl">'+rb.l+'</div><div class="rb-val">'+(v?v.toFixed(1):'—')+'</div><div class="rb-bar"><div class="rb-fill" style="width:'+(v/5*100)+'%"></div></div></div>';
+  }).join('');
+  var badges='';
+  if(company.is_certified_partner) badges+='<span class="badge badge-cert">✓ CERTIFIED PARTNER</span>';
+  if(company.is_trending) badges+='<span class="badge badge-trend">↑ TRENDING</span>';
+  el.innerHTML=
+    '<div class="co-detail-hero">'+
+      '<div class="co-detail-head">'+
+        '<div class="co-big-logo">'+(company.emoji||'🏢')+'</div>'+
+        '<div style="flex:1;">'+
+          (badges?'<div class="co-badges" style="margin-bottom:8px;">'+badges+'</div>':'')+
+          '<div class="co-big-name">'+escH(company.name)+'</div>'+
+          '<div class="co-big-meta">'+
+            (company.industry?'<span>🏭 '+escH(company.industry)+'</span>':'')+
+            (company.city?'<span>📍 '+escH(company.city)+'</span>':'')+
+            (company.size_range?'<span>👥 '+escH(company.size_range)+'</span>':'')+
+          '</div>'+
+        '</div>'+
+        '<div style="display:flex;align-items:center;gap:12px;">'+
+          '<div class="co-big-rating-num">'+r.toFixed(1)+'</div>'+
+          '<div><div class="co-big-stars">'+stars+'</div><div style="color:var(--text-muted);font-size:0.78rem;font-weight:600;">'+(company.review_count||reviews.length)+' reviews</div></div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="rating-breakdown">'+rbHTML+'</div>'+
+      (company.description?'<p style="color:var(--text-muted);font-size:0.87rem;line-height:1.65;margin-top:18px;padding-top:18px;border-top:1px solid var(--border);">'+escH(company.description)+'</p>':'')+
+      '<div class="claim-strip">🏢 Is this your company? <span class="claim-link" onclick="toast(\'Email admin@legitadvisor.io to claim this profile.\')">Claim this profile →</span></div>'+
+    '</div>'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">'+
+      '<div style="font-family:\'Instrument Serif\',serif;font-size:1.3rem;font-weight:400;color:var(--text);">Employee Reviews</div>'+
+      '<button class="btn btn-yellow" onclick="document.getElementById(\'q-company\').value=\''+escH(company.name)+'\';window.scrollTo({top:0,behavior:\'smooth\'})">Write Review ↑</button>'+
+    '</div>'+
+    '<div class="reviews-feed">'+(reviews.length?reviews.map(rvCardHTML).join(''):'<div class="empty-box"><div class="empty-icon">📝</div><div class="empty-title">No reviews yet</div><div class="empty-text">Be the first to share your experience.</div></div>')+'</div>';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══════════════════════════════════════════════════
+// QUICK REVIEW FORM — multi-step
+// ═══════════════════════════════════════════════════
+function qNext(step) {
+  // Validate current before advancing
+  if (step > qStep) {
+    if (qStep === 0) {
+      if (!document.getElementById('q-company').value.trim()) return toast('Enter a company name','err');
+      if (!document.getElementById('q-role').value.trim()) return toast('Enter your role','err');
+    }
+    if (qStep === 1) {
+      if (!getRadio('qoverall')) return toast('Please rate your overall experience','err');
+    }
+  }
+  // Move
+  document.getElementById('qstep-'+qStep).classList.remove('active');
+  qStep = step;
+  document.getElementById('qstep-'+step).classList.add('active');
+  // Update dots
+  [0,1,2].forEach(function(i){
+    var d = document.getElementById('qd'+i);
+    d.classList.remove('active','done');
+    if (i === step) d.classList.add('active');
+    else if (i < step) d.classList.add('done');
+  });
+}
+
+async function submitReview() {
+  var company = document.getElementById('q-company').value.trim();
+  var role    = document.getElementById('q-role').value.trim();
+  var title   = document.getElementById('q-title').value.trim();
+  var body    = document.getElementById('q-body').value.trim();
+  var overall = getRadio('qoverall');
+  if (!title) return toast('Add a headline','err');
+  if (!body || body.length < 50) return toast('Review needs 50+ characters','err');
+  if (!overall) return toast('Rate your overall experience','err');
+  var btn = document.getElementById('q-submit-btn');
+  btn.disabled=true; btn.textContent='Submitting…';
+  if (!currentUser && sb) { var {data}=await sb.auth.signInAnonymously(); if(data.user) currentUser=data.user; }
+  var payload = {
+    company_name:company, role, emp_type:'full_time',
+    employment_status:document.getElementById('q-status').value,
+    title, body,
+    pros:document.getElementById('q-pros').value.trim(),
+    cons:document.getElementById('q-cons').value.trim(),
+    rating_overall:parseInt(overall),
+    rating_wlb:parseInt(getRadio('qwlb'))||null,
+    rating_salary:parseInt(getRadio('qsal'))||null,
+    rating_mgmt:parseInt(getRadio('qmgmt'))||null,
+    rating_growth:parseInt(getRadio('qgrowth'))||null,
+    author_name:document.getElementById('q-author').value.trim()||'Anonymous',
+    is_certified:false, status:'pending', helpful_count:0
+  };
+  var match = allCompanies.find(c=>c.name.toLowerCase()===company.toLowerCase());
+  if (match) payload.company_id = match.id;
+  if (sb) { var {error}=await sb.from('reviews').insert([payload]); if(error){btn.disabled=false;btn.textContent='Submit →';return toast('Error: '+error.message,'err');} }
+  btn.disabled=false; btn.textContent='Submit →';
+  toast('Review submitted! Appears after approval. ✓','ok');
+  // reset
+  qNext(0);
+  ['q-company','q-role','q-title','q-body','q-pros','q-cons','q-author'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});
+  document.querySelectorAll('.star-row input, .sub-star-row input').forEach(i=>i.checked=false);
+}
+
+async function submitFullReview() {
+  var company = document.getElementById('wr-company').value.trim();
+  var role    = document.getElementById('wr-role').value.trim();
+  var title   = document.getElementById('wr-title').value.trim();
+  var body    = document.getElementById('wr-body').value.trim();
+  var overall = getRadio('wroverall');
+  if (!company||!role||!title||!body||!overall) return toast('Fill in all required fields','err');
+  if (body.length < 50) return toast('Review needs 50+ characters','err');
+  var btn = document.getElementById('wr-submit-btn');
+  btn.disabled=true; btn.textContent='Submitting…';
+  if (!currentUser && sb) { var {data}=await sb.auth.signInAnonymously(); if(data.user) currentUser=data.user; }
+  var payload = {
+    company_name:company, role,
+    emp_type:document.getElementById('wr-emptype').value,
+    employment_status:document.getElementById('wr-status').value,
+    location:document.getElementById('wr-location').value.trim(),
+    title, body,
+    pros:document.getElementById('wr-pros').value.trim(),
+    cons:document.getElementById('wr-cons').value.trim(),
+    rating_overall:parseInt(overall),
+    rating_wlb:parseInt(getRadio('wrwlb'))||null,
+    rating_salary:parseInt(getRadio('wrsal'))||null,
+    rating_mgmt:parseInt(getRadio('wrmgmt'))||null,
+    rating_growth:parseInt(getRadio('wrgrowth'))||null,
+    author_name:document.getElementById('wr-author').value.trim()||'Anonymous',
+    is_certified:false, status:'pending', helpful_count:0
+  };
+  var match = allCompanies.find(c=>c.name.toLowerCase()===company.toLowerCase());
+  if (match) payload.company_id = match.id;
+  if (sb) { var {error}=await sb.from('reviews').insert([payload]); if(error){btn.disabled=false;btn.textContent='Submit Review →';return toast('Error: '+error.message,'err');} }
+  btn.disabled=false; btn.textContent='Submit Review →';
+  closeOverlay('write-overlay');
+  toast('Review submitted! ✓','ok');
+}
+
+function getRadio(name) {
+  var el = document.querySelector('input[name="'+name+'"]:checked');
+  return el ? el.value : null;
+}
+
+// ═══════════════════════════════════════════════════
+// INTERACTIONS
+// ═══════════════════════════════════════════════════
+async function markHelpful(id, btn) {
+  if (btn.classList.contains('on')) return;
+  btn.classList.add('on');
+  var sp = btn.querySelector('span');
+  if (sp) sp.textContent = parseInt(sp.textContent||0)+1;
+  if (sb) await sb.rpc('increment_helpful',{review_id:id});
+}
+async function reportRv(id) {
+  if (!confirm('Report this review?')) return;
+  if (sb) await sb.from('review_reports').insert([{review_id:id,reason:'inappropriate'}]);
+  toast('Report submitted. Our team will review it.','ok');
+}
+
+// ═══════════════════════════════════════════════════
+// SEARCH
+// ═══════════════════════════════════════════════════
+function handleSearch(val) {
+  var sug = document.getElementById('search-sug');
+  if (!val||val.length<2) { sug.classList.remove('open'); return; }
+  var list = allCompanies.length ? allCompanies : getDemoCompanies();
+  var hits = list.filter(c=>c.name.toLowerCase().includes(val.toLowerCase())).slice(0,5);
+  if (!hits.length) { sug.classList.remove('open'); return; }
+  sug.innerHTML = hits.map(c=>
+    '<div class="sug-row" onclick="viewCompany(\''+c.id+'\');document.getElementById(\'search-sug\').classList.remove(\'open\')">'+
+      (c.emoji||'🏢')+' <div><div>'+escH(c.name)+'</div><div class="sug-meta">'+(c.industry||'')+' · '+(c.city||'')+'</div></div></div>'
+  ).join('');
+  sug.classList.add('open');
+}
+function doSearch() {
+  var q = document.getElementById('search-input').value.trim();
+  var loc = document.getElementById('loc-input').value.trim();
+  document.getElementById('search-sug').classList.remove('open');
+  var list = allCompanies.length ? allCompanies : getDemoCompanies();
+  var res = list.filter(c=>{
+    var nm = !q || c.name.toLowerCase().includes(q.toLowerCase()) || (c.industry&&c.industry.toLowerCase().includes(q.toLowerCase()));
+    var lc = !loc || (c.city&&c.city.toLowerCase().includes(loc.toLowerCase()));
+    return nm&&lc;
+  });
+  document.getElementById('search-results-title').textContent = q ? 'Results for "'+q+'"'+(loc?' in '+loc:'') : 'All Companies';
+  document.getElementById('search-results-grid').innerHTML = res.length ? res.map(coCardHTML).join('') :
+    '<div class="empty-box"><div class="empty-icon">🔍</div><div class="empty-title">No results</div><div class="empty-text">Try a different term.</div></div>';
+  showView('search');
+}
+function searchByInd(industry) {
+  var list = allCompanies.length ? allCompanies : getDemoCompanies();
+  var res = list.filter(c=>c.industry&&c.industry.toLowerCase()===industry.toLowerCase());
+  document.getElementById('search-results-title').textContent = industry+' Companies';
+  document.getElementById('search-results-grid').innerHTML = res.length ? res.map(coCardHTML).join('') :
+    '<div class="empty-box"><div class="empty-icon">🏭</div><div class="empty-title">No companies in '+industry+' yet</div></div>';
+  showView('search');
+}
+
+// ═══════════════════════════════════════════════════
+// FILTERS
+// ═══════════════════════════════════════════════════
+function filterRv(f, el) {
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on'); rvFilter=f; loadReviews();
+}
+function sortRv(v) { rvSort=v; loadReviews(); }
+
+// ═══════════════════════════════════════════════════
+// VIEWS
+// ═══════════════════════════════════════════════════
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  if (name==='home' && MAP) setTimeout(()=>MAP.invalidateSize(),200);
+}
+
+// ═══════════════════════════════════════════════════
+// OVERLAYS (modals)
+// ═══════════════════════════════════════════════════
+function openOverlay(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
+function closeOverlay(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
+document.addEventListener('click', function(e){ if(e.target.classList.contains('overlay')) closeOverlay(e.target.id); });
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') document.querySelectorAll('.overlay.open').forEach(o=>closeOverlay(o.id)); });
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+function toast(msg, type) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'on' + (type?' '+type:'');
+  clearTimeout(toastTmr);
+  toastTmr = setTimeout(()=>el.className='', 4000);
+}
+
+// ═══════════════════════════════════════════════════
+// UTIL
+// ═══════════════════════════════════════════════════
+function escH(s) { if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ═══════════════════════════════════════════════════
+// DEMO DATA
+// ═══════════════════════════════════════════════════
+function getDemoCompanies() {
+  return [
+    {id:'d1',name:'Skroutz',industry:'Technology',emoji:'🛒',city:'Athens',lat:37.984,lng:23.728,avg_rating:4.2,review_count:87,is_certified_partner:true,is_trending:true,tagline:'Fast-paced e-commerce, strong engineering culture.'},
+    {id:'d2',name:'OTE Group',industry:'Telecommunications',emoji:'📡',city:'Athens',lat:37.976,lng:23.734,avg_rating:3.0,review_count:213,is_certified_partner:false,tagline:'Solid benefits, slow-moving corporate culture.'},
+    {id:'d3',name:'Alpha Bank',industry:'Finance',emoji:'🏦',city:'Athens',lat:37.974,lng:23.725,avg_rating:3.4,review_count:145,is_certified_partner:false,tagline:'Stable employment, traditional hierarchy.'},
+    {id:'d4',name:'Cosmote',industry:'Telecommunications',emoji:'📱',city:'Athens',lat:37.990,lng:23.740,avg_rating:3.7,review_count:98,is_trending:true,tagline:'Good pay, lots of perks. Internal movement is hard.'},
+    {id:'d5',name:'Eurobank',industry:'Finance',emoji:'💳',city:'Athens',lat:37.979,lng:23.730,avg_rating:3.2,review_count:167,is_certified_partner:false,tagline:'Professional environment. Work-life balance varies.'},
+    {id:'d6',name:'Public',industry:'Retail',emoji:'🛍️',city:'Athens',lat:37.977,lng:23.726,avg_rating:2.8,review_count:256,tagline:'High customer volume, understaffed. Entry-level only.'},
+    {id:'d7',name:'Thessaloniki Hospital',industry:'Healthcare',emoji:'🏥',city:'Thessaloniki',lat:40.634,lng:22.938,avg_rating:3.1,review_count:54,tagline:'Meaningful work, chronically underfunded.'},
+    {id:'d8',name:'Egnatia Odos',industry:'Construction',emoji:'🏗️',city:'Thessaloniki',lat:40.629,lng:22.944,avg_rating:3.8,review_count:31,tagline:'Good engineering projects. Pay could be better.'},
+  ];
+}
+
+function getDemoReviews() {
+  return [
+    {id:'r1',company_name:'Skroutz',companies:{name:'Skroutz',emoji:'🛒',industry:'Technology'},role:'Backend Developer',employment_status:'current',title:'The best tech job in Athens — bar none',body:'Truly meritocratic. You ship real things that millions of Greeks use. The tech stack is modern Python/Elixir, you get real autonomy. Salaries have been climbing to match market. The open-plan office in Chalandri has great energy but can be noisy.',pros:'Autonomy, real product impact, improving salaries, smart colleagues',cons:'Open office noise, on-call rotation',rating_overall:5,rating_wlb:4,rating_salary:4,rating_mgmt:5,rating_growth:5,is_certified:true,helpful_count:62,created_at:'2025-03-10T09:00:00Z'},
+    {id:'r2',company_name:'OTE Group',companies:{name:'OTE Group',emoji:'📡',industry:'Telecommunications'},role:'Network Engineer',employment_status:'former',title:'State company mindset — secure but stagnant',body:'Job security is real — almost impossible to be let go. Benefits are generous: health insurance, canteen, subsidized transport. But the pace is glacial. Decisions take months. Innovation is a buzzword they use in presentations but rarely apply. I left after 6 years because I wanted to actually build things.',pros:'Job security, benefits package, pensionable',cons:'Bureaucracy, no real innovation, promotions based on seniority not merit',rating_overall:3,rating_wlb:4,rating_salary:3,rating_mgmt:2,rating_growth:2,is_certified:false,helpful_count:89,created_at:'2025-02-20T14:00:00Z'},
+    {id:'r3',company_name:'Alpha Bank',companies:{name:'Alpha Bank',emoji:'🏦',industry:'Finance'},role:'Branch Manager',employment_status:'current',title:'Stable, professional — if you can handle the pressure',body:'The bank has survived everything Greece has thrown at it. Job is stable and pay is above market for Greece. But branch targets are aggressive, especially since the crisis. Management has improved post-2015, but there are still old-guard directors who rule by fear.',pros:'Stability, above-average salary, good private insurance',cons:'Sales pressure, some toxic senior managers, slow digital transformation',rating_overall:3,rating_wlb:3,rating_salary:4,rating_mgmt:3,rating_growth:3,is_certified:true,helpful_count:44,created_at:'2025-01-28T10:30:00Z'},
+    {id:'r4',company_name:'Public',companies:{name:'Public',emoji:'🛍️',industry:'Retail'},role:'Sales Associate',employment_status:'former',title:'Revolving door — and management knows it',body:'Minimum wage, split shifts, Sunday work compulsory. Targets set by people who have never worked a floor. Good colleagues at store level are the only reason people stay. Management is nice in interviews and absent the rest of the time. Left after 8 months.',pros:'Friendly coworkers, staff discount',cons:'Minimum wage, Sunday mandated, unrealistic targets, absent management',rating_overall:2,rating_wlb:1,rating_salary:1,rating_mgmt:2,rating_growth:2,is_certified:false,helpful_count:111,created_at:'2025-03-01T08:00:00Z'},
+  ];
+}
+</script>
+</body>
+</html>
